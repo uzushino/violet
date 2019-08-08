@@ -1,0 +1,19 @@
+[package]
+name = "violet"
+version = "0.1.0"
+authors = ["uzushino <torattoria.mamiya@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+failure = "*"
+comrak = "*"
+mdcat = "*"
+quick-js = "*"
+syntect = "*"
+pulldown-cmark = "*"
+clap = "*"
+env_logger = "*"
+termion = "*"
+unicode-width = "0.1.5"
+terminal_size = "*"
+libc = "*"

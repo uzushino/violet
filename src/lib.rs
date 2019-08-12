@@ -115,6 +115,7 @@ impl App {
 fn source() -> Option<BufReader<File>> {
     unsafe {
         let isatty = libc::isatty(libc::STDIN_FILENO as i32) != 0;
+
         if !isatty {
             let stdin = File::from_raw_fd(libc::dup(libc::STDIN_FILENO));
             let file = File::open("/dev/tty").unwrap();

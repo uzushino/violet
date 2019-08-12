@@ -27,8 +27,10 @@ impl Isolate {
   }
 
   pub fn eval<A: Into<String>>(&self, script: A) -> Result<String, quick_js::ExecutionError> {
-    self.context.eval_as::<String>(script.into().as_str());
+    self.context.eval_as::<String>(script.into().as_str())?;
+
     let s = self.buf.lock().unwrap();
+
     Ok(s.to_string())
   }
 }

@@ -10,7 +10,6 @@ Test
 
 ```violet
 const a = `Hello`
-
 println(a)
 println(", world!")
 ```

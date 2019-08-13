@@ -22,7 +22,15 @@ use markdown::Markdown;
 pub struct App {
     source: Arc<Mutex<Option<BufReader<File>>>>,
     prompt: Arc<Mutex<Markdown<RawTerminal<Stdout>>>>,
+    interval: Option<u64>,
 }
+
+pub enum Action {
+    Timer,
+}
+
+#[derive(Default)]
+pub struct AppState;
 
 impl App {
     pub fn new(input: String) -> Self {
@@ -34,6 +42,7 @@ impl App {
         App {
             prompt,
             source: Arc::new(Mutex::new(source)),
+            interval: None,
         }
     }
 
@@ -100,13 +109,14 @@ impl App {
                         // Quit message.
                         break;
                     }
+                    Ok(Event::Reload) => {
+                        let _ = prompt.lock().and_then(|mut f| {
+                            f.render().and_then(|_| f.flush()).unwrap();
+                            Ok(())
+                        });
+                    }
                     _ => {},
                 };
-
-                let _ = prompt.lock().and_then(|mut f| {
-                    f.render().and_then(|_| f.flush()).unwrap();
-                    Ok(())
-                });
             }
         })
     }

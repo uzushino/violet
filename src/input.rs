@@ -1,6 +1,5 @@
 use failure::Error;
 use std::sync::mpsc::Sender;
-
 use termion::event::Key;
 use termion::input::TermRead;
 
@@ -31,9 +30,7 @@ impl Input {
                 Key::Right => tx.send(Event::Right)?,
                 Key::Down => tx.send(Event::Down)?,
                 Key::Up => tx.send(Event::Up)?,
-                Key::F(1) => tx.send(Event::Fn1)?,
-                Key::F(2) => tx.send(Event::Fn2)?,
-                Key::F(3) => tx.send(Event::Fn3)?,
+                Key::F(5) => tx.send(Event::Reload)?,
                 _ => {}
             };
         }

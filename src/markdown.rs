@@ -103,6 +103,7 @@ impl<T: Write + Send > Markdown<T> {
     write!(self.stdout, "{}", termion::clear::All)?;
 
     let mut s: Vec<u8> = Vec::default();
+
     mdcat::push_tty(
         &mut s, 
         mdcat::TerminalCapabilities::ansi(), 

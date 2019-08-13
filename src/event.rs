@@ -14,8 +14,5 @@ pub enum Event {
     Left,
     Right,
     Quit,
-
-    Fn1,
-    Fn2,
-    Fn3,
+    Reload,
 }

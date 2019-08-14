@@ -11,5 +11,8 @@ Test
 ```violet
 const a = `Hello`
 println(a)
-println(", world!")
+println(", world!\n")
+
+var date2 = new Date();
+println(date2.toDateString() + " " + date2.toLocaleTimeString())
 ```

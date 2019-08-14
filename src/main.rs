@@ -9,8 +9,17 @@ fn main() -> Result<(), failure::Error> {
         .version(crate_version!())
         .arg(
             Arg::with_name("FILE")
-        ).get_matches();
-    
+        )
+        .arg(
+            Arg::with_name("INTERVAL")
+        )
+        .get_matches();
+
+    let interval = matches
+        .value_of("INTERVAL")
+        .and_then(|i: &str| i.to_owned().parse().ok())
+        .unwrap_or(0u64);
+
     let input: String = match matches.value_of("FILE") {
         Some(file) => std::fs::read_to_string(file)?,
         None => {
@@ -20,12 +29,15 @@ fn main() -> Result<(), failure::Error> {
         },
     };
 
-    run(input.as_str())?;
+    run(input.as_str(), interval)?;
 
     Ok(())
 }
 
-fn run(input: &str) -> Result<(), failure::Error> {
-    let app = violet::App::new(input.to_string());
+fn run(input: &str, interval: u64) -> Result<(), failure::Error> {
+    let app = violet::App::new(
+        input.to_string(),
+        interval,
+    );
     app.run()
 }

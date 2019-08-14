@@ -22,7 +22,7 @@ use markdown::Markdown;
 pub struct App {
     source: Arc<Mutex<Option<BufReader<File>>>>,
     prompt: Arc<Mutex<Markdown<RawTerminal<Stdout>>>>,
-    interval: Option<u64>,
+    interval: u64,
 }
 
 pub enum Action {
@@ -33,7 +33,7 @@ pub enum Action {
 pub struct AppState;
 
 impl App {
-    pub fn new(input: String) -> Self {
+    pub fn new(input: String, interval: u64) -> Self {
         let stdout = io::stdout();
         let source = source();
         let stdout = stdout.into_raw_mode().unwrap();
@@ -41,8 +41,8 @@ impl App {
 
         App {
             prompt,
+            interval,
             source: Arc::new(Mutex::new(source)),
-            interval: None,
         }
     }
 

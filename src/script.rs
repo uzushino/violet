@@ -19,6 +19,7 @@ impl Isolate {
       isolate.context.add_callback("println", move |a: String| {
         let mut c = b.lock().unwrap();
         (*c).push_str(a.as_str());
+        (*c).push_str("\n");
         1i32
       }).unwrap();
     }
@@ -29,7 +30,6 @@ impl Isolate {
   pub fn eval<A: Into<String>>(&self, script: A) -> Result<String, quick_js::ExecutionError> {
     self.context.eval_as::<String>(script.into().as_str());
     let s = self.buf.lock().unwrap();
-
     Ok(s.to_string())
   }
 }

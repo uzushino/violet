@@ -45,7 +45,6 @@ impl<T: Write + Send > Markdown<T> {
     
   pub fn flush(&mut self) -> Result<(), failure::Error> {
     self.stdout.flush()?;
-
     Ok(())
   }
 

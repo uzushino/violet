@@ -9,9 +9,15 @@ fn main() -> Result<(), failure::Error> {
         .version(crate_version!())
         .arg(
             Arg::with_name("FILE")
+                .required(true)
+                .help("Sets a render markdown.")
         )
         .arg(
             Arg::with_name("INTERVAL")
+                .short("i")
+                .long("interval")
+                .help("Sets a show markdown time interval(second).")
+                .takes_value(true)
         )
         .get_matches();
 

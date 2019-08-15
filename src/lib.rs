@@ -7,6 +7,7 @@ use std::sync::{
     Arc, Mutex,
 };
 use std::thread::{self, JoinHandle};
+use std::time;
 use termion::raw::{IntoRawMode, RawTerminal};
 
 mod cursor;
@@ -49,19 +50,21 @@ impl App {
     pub fn run(&self) -> Result<(), failure::Error> {
         {
             let mut p = self.prompt.lock().unwrap();
-
+            cursor::hide(&mut p.stdout);
             p.render()?;
             p.flush()?;
-
-            cursor::hide(&mut p.stdout);
         }
 
         let (tx, rx) = mpsc::channel();
         let th = {
+            if self.interval > 0 {
+                self.timer_handler(tx.clone());
+            }
+
             self.input_handler(tx.clone());
             self.event_handler(tx.clone(), rx)
         };
-
+        
         thread::spawn(move || {
             let _ = Input::reader(tx.clone());
         });
@@ -96,6 +99,16 @@ impl App {
                     _ => {}
                 }
             }
+        })
+    }
+
+    pub fn timer_handler(&self, tx: Sender<Event>) -> JoinHandle<()> {
+        let interval = self.interval.clone();
+
+        thread::spawn(move || loop {
+            let ms = time::Duration::from_secs(interval);
+            std::thread::sleep(ms);
+            let _ = tx.send(Event::Reload);
         })
     }
 

@@ -22,7 +22,7 @@ use markdown::Markdown;
 
 pub struct App {
     source: Arc<Mutex<Option<BufReader<File>>>>,
-    prompt: Arc<Mutex<Markdown<RawTerminal<Stdout>>>>,
+    pub prompt: Arc<Mutex<Markdown<RawTerminal<Stdout>>>>,
     interval: u64,
 }
 

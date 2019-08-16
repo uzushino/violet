@@ -48,12 +48,12 @@ impl<T: Write + Send > Markdown<T> {
     Ok(())
   }
 
-  pub fn parse<A>(&self, input: &str, cb: A) ->  Result<String, failure::Error> where A: Fn(String) -> String {
+  pub fn parse<A>(&self, cb: A) ->  Result<String, failure::Error> where A: Fn(String) -> String {
     let arena = Arena::new();
 
     let root = parse_document(
         &arena,
-        input,
+        self.input.as_str(),
         &ComrakOptions::default());
 
     iter_nodes(root, &|node| {
@@ -84,25 +84,26 @@ impl<T: Write + Send > Markdown<T> {
     Ok(String::from_utf8(md)?)
   }
 
+  pub fn evaluate(&self) -> Result<String, failure::Error> {
+    let isolate = Isolate::new()?;
+    self.parse(|script| isolate.eval(script).unwrap())
+  }
+
   pub fn render(&mut self) -> Result<(), failure::Error> {
     let syntax_set = SyntaxSet::load_defaults_nonewlines();
-    let isolate = Isolate::new()?;
-    let changed = self.parse(self.input.as_str(), |script| {
-        let a = isolate.eval(script).unwrap();
-        a
-    })?;
+    let text = self.evaluate()?;
     let parser = pulldown_cmark::Parser::new_ext(
-        changed.as_str(),
+        text.as_str(),
         make_options()
     );
-    let cd = std::env::current_dir()?;
-    let size = mdcat::TerminalSize::detect().unwrap_or_default();
 
     write!(self.stdout, "{}", termion::cursor::Goto(1, 1))?;
     write!(self.stdout, "{}", termion::clear::All)?;
 
-    let mut s: Vec<u8> = Vec::default();
+    let cd = std::env::current_dir()?;
+    let size = mdcat::TerminalSize::detect().unwrap_or_default();
 
+    let mut s: Vec<u8> = Vec::default();
     mdcat::push_tty(
         &mut s, 
         mdcat::TerminalCapabilities::ansi(), 

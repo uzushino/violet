@@ -44,7 +44,7 @@ fn main() -> Result<(), failure::Error> {
         .and_then(|i: &str| i.to_owned().parse().ok())
         .unwrap_or(0u64);
 
-    let input: String = match matches.value_of("FILE") {
+    let input = match matches.value_of("FILE") {
         Some(file) => std::fs::read_to_string(file)?,
         None => {
             let mut buf = Vec::default();
@@ -53,34 +53,44 @@ fn main() -> Result<(), failure::Error> {
         },
     };
 
-    run(input.as_str(), interval)?;
+    if matches.value_of("SERVER").is_some() {
+        let port = matches.value_of("PORT")
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(8088);
+        run_with_server(input.as_str(), interval, port)?;
+    } else {
+        run(input.as_str(), interval)?;
+    }
 
     Ok(())
 }
 
-fn run_with_server(input: &str, interval: u64) -> Result<(), failure::Error> {
+fn run_with_server(input: &str, interval: u64, port: u64) -> Result<(), failure::Error> {
     let app = violet::App::new(
         input.to_string(),
         interval,
     );
 
+    let prompt = app.prompt.clone();
     thread::spawn(move || {
         let sys = actix_rt::System::new("http-server");
+        
+        HttpServer::new(move || {
+            let prompt = prompt.clone();
 
-        let _ = HttpServer::new(|| {
-            App::new().route("/", web::get().to(|| {
-                HttpResponse::Ok()
+            App::new().route("/", web::get().to(move || {
+                let a = prompt.lock().unwrap();
+                a.evaluate()
             }))
         })
-        .bind("127.0.0.1:8088")
+        .bind(format!("127.0.0.1:{}", port))
         .unwrap()
         .start();
+
         let _ = sys.run();
     });
     
-    app.run();
-
-    Ok(())
+    app.run()
 }
 
 fn run(input: &str, interval: u64) -> Result<(), failure::Error> {

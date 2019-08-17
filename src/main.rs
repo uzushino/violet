@@ -1,8 +1,7 @@
 
-use clap::{Arg, crate_version};
+use clap::{Arg, crate_version, value_t};
 use std::io::Read;
-use actix_web::{web, App, HttpResponse, HttpServer};
-use std::sync::mpsc;
+use actix_web::{web, App, HttpServer, HttpResponse};
 use std::thread;
 use futures::future::Future;
 
@@ -33,17 +32,13 @@ fn main() -> Result<(), failure::Error> {
             Arg::with_name("PORT")
                 .long("port")
                 .short("p")
-                .default_value_if("SERVER", None, "8080")
+                .default_value_if("SERVER", None, "8088")
                 .takes_value(true)
                 .help("Sets a http server port.")
         )
         .get_matches();
 
-    let interval = matches
-        .value_of("INTERVAL")
-        .and_then(|i: &str| i.to_owned().parse().ok())
-        .unwrap_or(0u64);
-
+    let interval = value_t!(matches, "INTERVAL", u64).unwrap_or(0);
     let input = match matches.value_of("FILE") {
         Some(file) => std::fs::read_to_string(file)?,
         None => {
@@ -53,10 +48,8 @@ fn main() -> Result<(), failure::Error> {
         },
     };
 
-    if matches.value_of("SERVER").is_some() {
-        let port = matches.value_of("PORT")
-            .and_then(|v| v.parse().ok())
-            .unwrap_or(8088);
+    if matches.is_present("SERVER") {
+        let port = value_t!(matches, "PORT", u64).unwrap_or(8088);
         run_with_server(input.as_str(), interval, port)?;
     } else {
         run(input.as_str(), interval)?;
@@ -71,26 +64,43 @@ fn run_with_server(input: &str, interval: u64, port: u64) -> Result<(), failure:
         interval,
     );
 
-    let prompt = app.prompt.clone();
-    thread::spawn(move || {
-        let sys = actix_rt::System::new("http-server");
-        
-        HttpServer::new(move || {
-            let prompt = prompt.clone();
+    let p = app.prompt.clone();
 
+    let (tx, rx) = std::sync::mpsc::channel();
+    let th = thread::spawn(move || {
+        let _ = actix_rt::System::new("http-server");
+        let bind_addr = format!("127.0.0.1:{}", port);
+
+        let addr = HttpServer::new(move || {
+            let p1 = p.clone();
             App::new().route("/", web::get().to(move || {
-                let a = prompt.lock().unwrap();
-                a.evaluate()
+                let markdown = {
+                    let a = p1.lock().unwrap();
+                    a.evaluate().unwrap()
+                };
+
+                let parser = pulldown_cmark::Parser::new(markdown.as_str());
+                let mut buf = String::new();
+                pulldown_cmark::html::push_html(&mut buf, parser);
+
+                HttpResponse::Ok()
+                    .content_type("text/html")
+                    .body(buf)
             }))
         })
-        .bind(format!("127.0.0.1:{}", port))
+        .bind(bind_addr)
         .unwrap()
         .start();
 
-        let _ = sys.run();
+        let _ = tx.send(addr);
     });
+
+    app.run()?;
     
-    app.run()
+    let _ = rx.recv()?.stop(true).wait();
+    let _ = th.join();
+
+    Ok(())
 }
 
 fn run(input: &str, interval: u64) -> Result<(), failure::Error> {
@@ -98,5 +108,6 @@ fn run(input: &str, interval: u64) -> Result<(), failure::Error> {
         input.to_string(),
         interval,
     );
+
     app.run()
 }

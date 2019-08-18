@@ -68,14 +68,15 @@ fn run_with_server(input: &str, interval: u64, port: u64) -> Result<(), failure:
 
     let (tx, rx) = std::sync::mpsc::channel();
     let th = thread::spawn(move || {
-        let _ = actix_rt::System::new("http-server");
+        let sys = actix_rt::System::new("http-server");
         let bind_addr = format!("127.0.0.1:{}", port);
 
         let addr = HttpServer::new(move || {
-            let p1 = p.clone();
-            App::new().route("/", web::get().to(move || {
+            App::new()
+            .data(p.clone())
+            .route("/", web::get().to(|data: web::Data<violet::AppData>| {
                 let markdown = {
-                    let a = p1.lock().unwrap();
+                    let a = data.lock().unwrap();
                     a.evaluate().unwrap()
                 };
 
@@ -93,12 +94,12 @@ fn run_with_server(input: &str, interval: u64, port: u64) -> Result<(), failure:
         .start();
 
         let _ = tx.send(addr);
+        let _ = sys.run();
     });
 
     app.run()?;
     
     let _ = rx.recv()?.stop(true).wait();
-    let _ = th.join();
 
     Ok(())
 }

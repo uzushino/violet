@@ -20,9 +20,11 @@ use event::Event;
 use input::Input;
 use markdown::Markdown;
 
+pub type AppData = Arc<Mutex<Markdown<RawTerminal<Stdout>>>>;
+
 pub struct App {
     source: Arc<Mutex<Option<BufReader<File>>>>,
-    pub prompt: Arc<Mutex<Markdown<RawTerminal<Stdout>>>>,
+    pub prompt: AppData,
     interval: u64,
 }
 
@@ -70,11 +72,12 @@ impl App {
         });
 
         let _ = th.join();
-
-        let mut f = self.prompt.lock().unwrap();
-        f.flush()?;
         
-        cursor::show(&mut f.stdout);
+        let _ = self.prompt.lock().and_then(|mut f| {
+            cursor::show(&mut f.stdout);
+            f.flush().unwrap();
+            Ok(())
+        });
 
         Ok(())
     }

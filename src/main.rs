@@ -31,10 +31,16 @@ fn main() -> Result<(), failure::Error> {
         .arg(
             Arg::with_name("PORT")
                 .long("port")
-                .short("p")
                 .default_value_if("SERVER", None, "8088")
                 .takes_value(true)
                 .help("Sets a http server port.")
+        )
+        .arg(
+            Arg::with_name("HOST")
+                .long("host")
+                .default_value_if("SERVER", None, "127.0.0.1")
+                .takes_value(true)
+                .help("Sets a http server address.")
         )
         .get_matches();
 
@@ -50,7 +56,10 @@ fn main() -> Result<(), failure::Error> {
 
     if matches.is_present("SERVER") {
         let port = value_t!(matches, "PORT", u64).unwrap_or(8088);
-        run_with_server(input.as_str(), interval, port)?;
+        let host = value_t!(matches, "HOST", String).unwrap_or("127.0.0.1".to_owned());
+        let bind_addr = format!("{}:{}", host, port);
+
+        run_with_server(input.as_str(), interval, bind_addr)?;
     } else {
         run(input.as_str(), interval)?;
     }
@@ -58,19 +67,17 @@ fn main() -> Result<(), failure::Error> {
     Ok(())
 }
 
-fn run_with_server(input: &str, interval: u64, port: u64) -> Result<(), failure::Error> {
+fn run_with_server(input: &str, interval: u64, bind_addr: String) -> Result<(), failure::Error> {
     let app = violet::App::new(
         input.to_string(),
         interval,
     );
 
     let p = app.prompt.clone();
-
     let (tx, rx) = std::sync::mpsc::channel();
 
     thread::spawn(move || {
         let sys = actix_rt::System::new("http-server");
-        let bind_addr = format!("127.0.0.1:{}", port);
 
         let addr = HttpServer::new(move || {
             App::new()

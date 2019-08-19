@@ -67,7 +67,8 @@ fn run_with_server(input: &str, interval: u64, port: u64) -> Result<(), failure:
     let p = app.prompt.clone();
 
     let (tx, rx) = std::sync::mpsc::channel();
-    let th = thread::spawn(move || {
+
+    thread::spawn(move || {
         let sys = actix_rt::System::new("http-server");
         let bind_addr = format!("127.0.0.1:{}", port);
 
@@ -98,8 +99,14 @@ fn run_with_server(input: &str, interval: u64, port: u64) -> Result<(), failure:
     });
 
     app.run()?;
-    
-    let _ = rx.recv()?.stop(true).wait();
+
+    rx.recv()?.stop(true).wait().unwrap();
+
+    app.prompt.lock().and_then(|f| {
+        // manually out of raw mode.
+        f.stdout.suspend_raw_mode().unwrap();
+        Ok(())
+    }).unwrap();
 
     Ok(())
 }

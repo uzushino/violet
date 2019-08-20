@@ -112,6 +112,7 @@ fn run_with_server(input: &str, interval: u64, bind_addr: String) -> Result<(), 
     app.prompt.lock().and_then(|f| {
         // manually out of raw mode.
         f.stdout.suspend_raw_mode().unwrap();
+
         Ok(())
     }).unwrap();
 

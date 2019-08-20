@@ -9,10 +9,14 @@ Test
 ~strike~
 
 ```violet
-const a = `Hello`
-println(a)
-println(", world!\n")
+const a = `Hello`;
+
+println(a);
+println(", world!\n");
 
 var date2 = new Date();
-println(date2.toDateString() + " " + date2.toLocaleTimeString())
+println(date2.toDateString() + " " + date2.toLocaleTimeString());
+
+var license = read_to_string("LICENSE");
+println(license)
 ```

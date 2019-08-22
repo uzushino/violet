@@ -13,7 +13,7 @@ impl Input {
 
         for c in stdin.keys() {
             let _ = match c? {
-                Key::Ctrl('c') => {
+                Key::Ctrl('c') | Key::Esc => {
                     tx.send(Event::Quit)?;
                     break;
                 }
@@ -31,6 +31,7 @@ impl Input {
                 Key::Down => tx.send(Event::Down)?,
                 Key::Up => tx.send(Event::Up)?,
                 Key::F(5) => tx.send(Event::Reload)?,
+                Key::F(2) => tx.send(Event::Save)?,
                 _ => {}
             };
         }

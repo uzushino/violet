@@ -15,4 +15,5 @@ pub enum Event {
     Right,
     Quit,
     Reload,
+    Save,
 }

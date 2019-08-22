@@ -125,6 +125,12 @@ impl App {
                         // Quit message.
                         break;
                     }
+                    Ok(Event::Save) => {
+                        let _ = prompt.lock().and_then(|f| {
+                            let _ = f.save_as("new_file.md");
+                            Ok(())
+                        });
+                    }
                     Ok(Event::Reload) => {
                         let _ = prompt.lock().and_then(|mut f| {
                             f.render().and_then(|_| f.flush()).unwrap();

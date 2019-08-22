@@ -7,7 +7,8 @@ use comrak::{
 };
 
 use pulldown_cmark::Options;
-use std::io::Write;
+use std::fs;
+use std::io::{ Write, BufWriter };
 use syntect::parsing::SyntaxSet;
 
 use crate::script::Isolate;
@@ -87,6 +88,16 @@ impl<T: Write + Send > Markdown<T> {
   pub fn evaluate(&self) -> Result<String, failure::Error> {
     let isolate = Isolate::new()?;
     self.parse(|script| isolate.eval(script).unwrap())
+  }
+
+  pub fn save_as(&self, path: &str) -> Result<(), failure::Error> {
+      let text = self.evaluate()?;
+      let file = fs::File::create(path)?;
+      let mut f = BufWriter::new(file);
+
+      f.write_all(text.as_bytes())?;
+
+      Ok(())
   }
 
   pub fn render(&mut self) -> Result<(), failure::Error> {

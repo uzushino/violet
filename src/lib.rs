@@ -25,6 +25,7 @@ pub type AppData = Arc<Mutex<Markdown<RawTerminal<Stdout>>>>;
 pub struct App {
     source: Arc<Mutex<Option<BufReader<File>>>>,
     pub prompt: AppData,
+
     interval: u64,
 }
 

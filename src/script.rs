@@ -1,4 +1,5 @@
 use quick_js::{ Context, JsValue };
+use  std::collections::HashMap;
 
 pub struct Isolate {
   context: quick_js::Context,
@@ -40,6 +41,32 @@ impl Isolate {
     |a: String| {
       let s = std::fs::read_to_string(a).unwrap_or_default();
       JsValue::String(s)
+    }
+  }
+
+  fn table() -> impl Fn(HashMap<String, JsValue>, Vec<HashMap<String, JsValue>>) -> JsValue {
+
+    |a: HashMap<String, JsValue>, b: Vec<HashMap<String, JsValue>>| {
+      let mut rows = Vec::new();
+      for m in b.iter() {
+        let mut row = linked_hash_map::LinkedHashMap::new();
+        for (k, v) in m {
+          let s = match v {
+            JsValue::String(s) => s.to_string(),
+            _ => "".to_string()
+          };
+          row.insert(k.to_string(), s);
+        }
+        rows.push(row);
+      }
+
+      let opt = madato::types::RenderOptions{
+        headings: None,
+        ..Default::default()
+      };
+      let tbl = madato::mk_table(rows.as_slice(), &Some(opt));
+
+      JsValue::Int(0)
     }
   }
 

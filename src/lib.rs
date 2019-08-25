@@ -14,7 +14,7 @@ mod cursor;
 mod input;
 mod event;
 mod script;
-mod markdown;
+pub mod markdown;
 
 use event::Event;
 use input::Input;

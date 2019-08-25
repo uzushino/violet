@@ -20,10 +20,10 @@ fn iter_nodes<'a, F>(node: &'a AstNode<'a>, f: &F) where F : Fn(&'a AstNode<'a>)
     }
 }
 
-fn make_options() -> Options {
+pub fn make_options() -> Options {
     let mut opts = Options::empty();
 
-    //opts.insert(Options::ENABLE_TABLES);
+    // opts.insert(Options::ENABLE_TABLES);
     opts.insert(Options::ENABLE_FOOTNOTES);
     opts.insert(Options::ENABLE_STRIKETHROUGH);
     opts.insert(Options::ENABLE_TASKLISTS);
@@ -82,7 +82,10 @@ impl<T: Write + Send > Markdown<T> {
         &mut md 
     )?;
 
-    Ok(String::from_utf8(md)?)
+    let text = String::from_utf8(md)?
+        .replace("&#10;", "\n");
+    
+    Ok(text)
   }
 
   pub fn evaluate(&self) -> Result<String, failure::Error> {

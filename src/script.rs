@@ -1,5 +1,6 @@
-use quick_js::{ Context, JsValue };
-use  std::collections::HashMap;
+use quick_js::{ Context, JsValue, ValueError };
+use std::collections::HashMap;
+use std::convert::TryFrom;
 
 pub struct Isolate {
   context: quick_js::Context,
@@ -9,6 +10,39 @@ pub struct Isolate {
 use std::sync::*;
 
 type CallbackResult = std::sync::Arc<std::sync::Mutex<std::string::String>>;
+
+struct MapWrap(pub HashMap<String, JsValue>);
+
+impl TryFrom<JsValue> for MapWrap {
+  type Error = ValueError;
+
+  fn try_from(value: JsValue) -> Result<Self, Self::Error> {
+      match value {
+        JsValue::Object(v) => Ok(MapWrap(v)),
+        _ => Err(ValueError::UnexpectedType)
+      }
+  }
+}
+
+struct VecMapWrap(pub Vec<MapWrap>);
+
+impl TryFrom<JsValue> for VecMapWrap {
+  type Error = ValueError;
+
+  fn try_from(value: JsValue) -> Result<Self, Self::Error> {
+      match value {
+        JsValue::Array(a) => {
+          let v = a
+            .into_iter()
+            .map(|v| TryFrom::try_from(v).unwrap())
+            .collect::<Vec<MapWrap>>();
+          Ok(VecMapWrap(v))
+        }
+        _ => Err(ValueError::UnexpectedType)
+      }
+  }
+}
+
 
 impl Isolate {
   pub fn new() -> Result<Self, quick_js::ContextError> {
@@ -21,6 +55,7 @@ impl Isolate {
 
       isolate.context.add_callback("println", Self::println(b.clone())).unwrap();
       isolate.context.add_callback("read_to_string", Self::read_to_string()).unwrap();
+      isolate.context.add_callback("table", Self::table()).unwrap();
     }
 
     Ok(isolate)
@@ -44,19 +79,23 @@ impl Isolate {
     }
   }
 
-  fn table() -> impl Fn(HashMap<String, JsValue>, Vec<HashMap<String, JsValue>>) -> JsValue {
-
-    |a: HashMap<String, JsValue>, b: Vec<HashMap<String, JsValue>>| {
+  fn table() -> impl Fn(VecMapWrap) -> JsValue {
+    |b: VecMapWrap| {
       let mut rows = Vec::new();
-      for m in b.iter() {
+      for m in b.0.iter() {
         let mut row = linked_hash_map::LinkedHashMap::new();
-        for (k, v) in m {
+
+        for (k, v) in m.0.clone() {
           let s = match v {
             JsValue::String(s) => s.to_string(),
+            JsValue::Int(i) => i.to_string(),
+            JsValue::Float(f) => f.to_string(),
             _ => "".to_string()
           };
+
           row.insert(k.to_string(), s);
         }
+        
         rows.push(row);
       }
 
@@ -64,9 +103,13 @@ impl Isolate {
         headings: None,
         ..Default::default()
       };
-      let tbl = madato::mk_table(rows.as_slice(), &Some(opt));
+      
+      let table = madato::mk_table(
+        rows.as_slice(), 
+        &Some(opt)
+      );
 
-      JsValue::Int(0)
+      JsValue::String(format!("\n{}\n", table))
     }
   }
 

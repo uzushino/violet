@@ -87,10 +87,14 @@ fn run_with_server(input: &str, interval: u64, bind_addr: String) -> Result<(), 
                     let a = data.lock().unwrap();
                     a.evaluate().unwrap()
                 };
-
-                let parser = pulldown_cmark::Parser::new(markdown.as_str());
-                let mut buf = String::new();
-                pulldown_cmark::html::push_html(&mut buf, parser);
+                let opts = comrak::ComrakOptions {
+                    ext_table: true,
+                    ..Default::default()
+                };
+                let buf = comrak::markdown_to_html(
+                    markdown.as_str(), 
+                    &opts
+                );
 
                 HttpResponse::Ok()
                     .content_type("text/html")
@@ -112,6 +116,7 @@ fn run_with_server(input: &str, interval: u64, bind_addr: String) -> Result<(), 
     app.prompt.lock().and_then(|f| {
         // manually out of raw mode.
         f.stdout.suspend_raw_mode().unwrap();
+        
         Ok(())
     }).unwrap();
 

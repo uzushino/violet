@@ -9,11 +9,11 @@ Test
 ~strike~
 
 ```violet
-const a = `Hello`;
+const a = "hello";
+println(a + ", world!");
 
-println(a);
-println(", world!\n");
-
-var date2 = new Date();
-println(date2.toDateString() + " " + date2.toLocaleTimeString());
+const tbl = table([
+  {"a": 1, "b": 2, "c": 3}
+]);
+println(tbl)
 ```

@@ -103,6 +103,7 @@ fn run_with_server(input: &str, interval: u64, bind_addr: String) -> Result<(), 
         })
         .bind(bind_addr)
         .unwrap()
+        .shutdown_timeout(1)
         .start();
 
         let _ = tx.send(addr);

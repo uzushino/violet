@@ -43,6 +43,24 @@ impl TryFrom<JsValue> for VecMapWrap {
   }
 }
 
+struct VecString(pub Vec<String>);
+
+impl TryFrom<JsValue> for VecString {
+  type Error = ValueError;
+
+  fn try_from(value: JsValue) -> Result<Self, Self::Error> {
+      match value {
+        JsValue::Array(a) => {
+          let v = a
+            .into_iter()
+            .map(|v| v.into_string().unwrap())
+            .collect::<Vec<String>>();
+          Ok(VecString(v))
+        }
+        _ => Err(ValueError::UnexpectedType)
+      }
+  }
+}
 
 impl Isolate {
   pub fn new() -> Result<Self, quick_js::ContextError> {
@@ -56,6 +74,7 @@ impl Isolate {
       isolate.context.add_callback("println", Self::println(b.clone())).unwrap();
       isolate.context.add_callback("read_to_string", Self::read_to_string()).unwrap();
       isolate.context.add_callback("table", Self::table()).unwrap();
+      isolate.context.add_callback("command", Self::run_command()).unwrap();
     }
 
     Ok(isolate)
@@ -76,6 +95,18 @@ impl Isolate {
     |a: String| {
       let s = std::fs::read_to_string(a).unwrap_or_default();
       JsValue::String(s)
+    }
+  }
+  
+  fn run_command() -> impl Fn(String, VecString) -> JsValue {
+    |cmd: String, args: VecString| {
+      let out = std::process::Command::new(cmd)
+            .args(args.0.as_slice())
+            .output()
+            .unwrap()
+            .stdout;
+
+      JsValue::String(String::from_utf8(out).unwrap()) 
     }
   }
 

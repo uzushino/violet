@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 
 pub struct Isolate {
+  pub buf: Arc<Mutex<String>>,
   context: quick_js::Context,
-  buf: Arc<Mutex<String>>,
 }
 
 use std::sync::*;
@@ -70,12 +70,12 @@ impl Isolate {
 
     {
       let b = Arc::clone(&isolate.buf);
-
       isolate.context.add_callback("println", Self::println(b.clone())).unwrap();
-      isolate.context.add_callback("read_to_string", Self::read_to_string()).unwrap();
-      isolate.context.add_callback("table", Self::table()).unwrap();
-      isolate.context.add_callback("command", Self::run_command()).unwrap();
     }
+    
+    isolate.context.add_callback("read_to_string", Self::read_to_string()).unwrap();
+    isolate.context.add_callback("table", Self::table()).unwrap();
+    isolate.context.add_callback("command", Self::run_command()).unwrap();
 
     Ok(isolate)
   }
@@ -87,7 +87,7 @@ impl Isolate {
       (*c).push_str(a.as_str());
       (*c).push_str("\n");
 
-      JsValue::Int(1i32)
+      JsValue::Null
     }
   }
   
@@ -97,7 +97,7 @@ impl Isolate {
       JsValue::String(s)
     }
   }
-  
+
   fn run_command() -> impl Fn(String, VecString) -> JsValue {
     |cmd: String, args: VecString| {
       let out = std::process::Command::new(cmd)

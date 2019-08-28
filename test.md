@@ -9,11 +9,21 @@ Test
 ~strike~
 
 ```violet
-const a = "hello";
-println(a + ", world!");
+
+const cargo = read_to_string("./Cargo.toml");
+const version = cargo.match("version = (.+)?");
+
+println("aaa")
+```
+
+## aa
+
+```violet
+println("Hello" + ", world!");
 
 const tbl = table([
   {"a": 1, "b": 2, "c": 3}
 ]);
+
 println(tbl)
 ```

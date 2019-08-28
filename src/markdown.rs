@@ -90,7 +90,15 @@ impl<T: Write + Send > Markdown<T> {
 
   pub fn evaluate(&self) -> Result<String, failure::Error> {
     let isolate = Isolate::new()?;
-    self.parse(|script| isolate.eval(script).unwrap())
+
+    self.parse(move |script| {
+        {
+            let mut buf = isolate.buf.lock().unwrap();
+            *buf = String::default();
+        }
+        
+        isolate.eval(script).unwrap()
+    })
   }
 
   pub fn save_as(&self, path: &str) -> Result<(), failure::Error> {

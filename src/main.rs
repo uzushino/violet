@@ -23,6 +23,12 @@ fn main() -> Result<(), failure::Error> {
                 .takes_value(true)
         )
         .arg(
+            Arg::with_name("AUTO_SAVE")
+                .long("auto_save")
+                .help("Sets the Auto save file when evaluate changed.")
+                .takes_value(true)
+        )
+        .arg(
             Arg::with_name("SERVER")
                 .long("server")
                 .short("s")

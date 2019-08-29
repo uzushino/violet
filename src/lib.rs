@@ -25,7 +25,6 @@ pub type AppData = Arc<Mutex<Markdown<RawTerminal<Stdout>>>>;
 pub struct App {
     source: Arc<Mutex<Option<BufReader<File>>>>,
     pub prompt: AppData,
-
     interval: u64,
 }
 
@@ -77,6 +76,7 @@ impl App {
         let _ = self.prompt.lock().and_then(|mut f| {
             cursor::show(&mut f.stdout);
             f.flush().unwrap();
+
             Ok(())
         });
 
@@ -112,12 +112,14 @@ impl App {
         thread::spawn(move || loop {
             let ms = time::Duration::from_secs(interval);
             std::thread::sleep(ms);
+
             let _ = tx.send(Event::Reload);
         })
     }
 
-    pub fn event_handler(&self, _tx: Sender<Event>, rx: Receiver<Event>) -> JoinHandle<()> {
+    pub fn event_handler(&self, tx: Sender<Event>, rx: Receiver<Event>) -> JoinHandle<()> {
         let prompt = self.prompt.clone();
+        let mut latest = String::default();
 
         thread::spawn(move || {
             loop {
@@ -134,7 +136,15 @@ impl App {
                     }
                     Ok(Event::Reload) => {
                         let _ = prompt.lock().and_then(|mut f| {
-                            f.render().and_then(|_| f.flush()).unwrap();
+                            f.render()
+                            .and_then(|markdown| {
+                                if latest != markdown {
+                                    let _ = tx.send(Event::Save);
+                                    latest = markdown;
+                                };
+                                f.flush()
+                            })
+                            .unwrap();
                             Ok(())
                         });
                     }

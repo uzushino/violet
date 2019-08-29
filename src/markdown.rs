@@ -96,7 +96,6 @@ impl<T: Write + Send > Markdown<T> {
             let mut buf = isolate.buf.lock().unwrap();
             *buf = String::default();
         }
-        
         isolate.eval(script).unwrap()
     })
   }
@@ -111,7 +110,7 @@ impl<T: Write + Send > Markdown<T> {
       Ok(())
   }
 
-  pub fn render(&mut self) -> Result<(), failure::Error> {
+  pub fn render(&mut self) -> Result<String, failure::Error> {
     let syntax_set = SyntaxSet::load_defaults_nonewlines();
     let text = self.evaluate()?;
     let parser = pulldown_cmark::Parser::new_ext(
@@ -137,14 +136,16 @@ impl<T: Write + Send > Markdown<T> {
     )?;
 
     // Change \n to \n\r for New line in raw_mode.
-    let t = String::from_utf8(s).unwrap()
+    let t = String::from_utf8(s)
+        .unwrap_or_default();
+    let tty = t 
         .split('\n')
         .map(ToString::to_string)
         .collect::<Vec<String>>()
         .join("\n\r");
 
-    write!(self.stdout, "{}", t)?;
+    write!(self.stdout, "{}", tty)?;
 
-    Ok(())
+    Ok(t)
   }
 }

@@ -51,30 +51,25 @@ fn main() -> Result<(), failure::Error> {
         .get_matches();
 
     let interval = value_t!(matches, "INTERVAL", u64).unwrap_or(0);
-    let input = match matches.value_of("FILE") {
-        Some(file) => std::fs::read_to_string(file)?,
-        None => {
-            let mut buf = Vec::default();
-            std::io::stdin().read_to_end(&mut buf)?;
-            String::from_utf8(buf)?
-        },
-    };
+    let file = value_t!(matches, "FILE", String).unwrap();
+    let input = std::fs::read_to_string(file.clone()).unwrap();
 
     if matches.is_present("SERVER") {
         let port = value_t!(matches, "PORT", u64).unwrap_or(8088);
         let host = value_t!(matches, "HOST", String).unwrap_or("127.0.0.1".to_owned());
         let bind_addr = format!("{}:{}", host, port);
 
-        run_with_server(input.as_str(), interval, bind_addr)?;
+        run_with_server(file, input.as_str(), interval, bind_addr)?;
     } else {
-        run(input.as_str(), interval)?;
+        run(file, input.as_str(), interval)?;
     }
 
     Ok(())
 }
 
-fn run_with_server(input: &str, interval: u64, bind_addr: String) -> Result<(), failure::Error> {
+fn run_with_server(file: String, input: &str, interval: u64, bind_addr: String) -> Result<(), failure::Error> {
     let app = violet::App::new(
+        file,
         input.to_string(),
         interval,
     );
@@ -130,8 +125,9 @@ fn run_with_server(input: &str, interval: u64, bind_addr: String) -> Result<(), 
     Ok(())
 }
 
-fn run(input: &str, interval: u64) -> Result<(), failure::Error> {
+fn run(file: String, input: &str, interval: u64) -> Result<(), failure::Error> {
     let app = violet::App::new(
+        file,
         input.to_string(),
         interval,
     );

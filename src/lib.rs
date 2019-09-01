@@ -8,6 +8,7 @@ use std::sync::{
 };
 use std::thread::{self, JoinHandle};
 use std::time;
+use chrono::prelude::*;
 use termion::raw::{IntoRawMode, RawTerminal};
 
 mod cursor;
@@ -23,6 +24,7 @@ use markdown::Markdown;
 pub type AppData = Arc<Mutex<Markdown<RawTerminal<Stdout>>>>;
 
 pub struct App {
+    file: String,
     source: Arc<Mutex<Option<BufReader<File>>>>,
     pub prompt: AppData,
     interval: u64,
@@ -36,13 +38,14 @@ pub enum Action {
 pub struct AppState;
 
 impl App {
-    pub fn new(input: String, interval: u64) -> Self {
+    pub fn new(file: String, input: String, interval: u64) -> Self {
         let stdout = io::stdout();
         let source = source();
         let stdout = stdout.into_raw_mode().unwrap();
         let prompt = Arc::new(Mutex::new(Markdown::new(stdout, input)));
 
         App {
+            file,
             prompt,
             interval,
             source: Arc::new(Mutex::new(source)),
@@ -119,6 +122,7 @@ impl App {
 
     pub fn event_handler(&self, tx: Sender<Event>, rx: Receiver<Event>) -> JoinHandle<()> {
         let prompt = self.prompt.clone();
+        let file = self.file.clone();
         let mut latest = String::default();
 
         thread::spawn(move || {
@@ -130,7 +134,9 @@ impl App {
                     }
                     Ok(Event::Save) => {
                         let _ = prompt.lock().and_then(|f| {
-                            let _ = f.save_as("new_file.md");
+                            let now = Utc::now().to_rfc3339();
+                            let _ = f.save_as(format!("{}_{}.md", now, file).as_str());
+
                             Ok(())
                         });
                     }

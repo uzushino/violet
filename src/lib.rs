@@ -134,9 +134,8 @@ impl App {
                     }
                     Ok(Event::Save) => {
                         let _ = prompt.lock().and_then(|f| {
-                            let now = Utc::now().to_rfc3339();
+                            let now = Utc::now().format("%Y-%m-%dT%H:%M:%SZ");
                             let _ = f.save_as(format!("{}_{}.md", now, file).as_str());
-
                             Ok(())
                         });
                     }

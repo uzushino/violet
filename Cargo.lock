@@ -2481,6 +2481,7 @@ dependencies = [
  "pulldown-cmark 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "quick-js 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "redux-rs 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "reqwest 0.9.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "syntect 3.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "terminal_size 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "termion 1.5.3 (registry+https://github.com/rust-lang/crates.io-index)",

@@ -55,6 +55,7 @@ impl TryFrom<JsValue> for VecString {
             .into_iter()
             .map(|v| v.into_string().unwrap())
             .collect::<Vec<String>>();
+
           Ok(VecString(v))
         }
         _ => Err(ValueError::UnexpectedType)
@@ -76,6 +77,7 @@ impl Isolate {
     isolate.context.add_callback("read_to_string", Self::read_to_string()).unwrap();
     isolate.context.add_callback("table", Self::table()).unwrap();
     isolate.context.add_callback("command", Self::run_command()).unwrap();
+    isolate.context.add_callback("get", Self::get_request()).unwrap();
 
     Ok(isolate)
   }
@@ -88,6 +90,13 @@ impl Isolate {
       (*c).push_str("\n");
 
       JsValue::Null
+    }
+  }
+  
+  fn get_request() -> impl Fn(String) -> JsValue {
+    |url: String| {
+      let mut resp = reqwest::get(url.as_str()).unwrap();
+      JsValue::String(resp.text().unwrap())
     }
   }
   

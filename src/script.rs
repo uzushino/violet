@@ -74,6 +74,7 @@ impl Isolate {
       isolate.context.add_callback("println", Self::println(b.clone())).unwrap();
     }
     
+    isolate.context.add_callback("write_to_file", Self::write_file()).unwrap();
     isolate.context.add_callback("read_to_string", Self::read_to_string()).unwrap();
     isolate.context.add_callback("table", Self::table()).unwrap();
     isolate.context.add_callback("command", Self::run_command()).unwrap();
@@ -97,6 +98,13 @@ impl Isolate {
     |url: String| {
       let mut resp = reqwest::get(url.as_str()).unwrap();
       JsValue::String(resp.text().unwrap())
+    }
+  }
+  
+  fn write_file() -> impl Fn(String, String) -> JsValue {
+    |a: String, b: String| {
+      std::fs::write(a, b).unwrap();
+      JsValue::Null
     }
   }
   

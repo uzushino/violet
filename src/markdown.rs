@@ -34,13 +34,15 @@ pub fn make_options() -> Options {
 pub struct Markdown<T: Write> {
     pub stdout: T,
     pub input: String,
+    scroll: u64,
 }
 
 impl<T: Write + Send > Markdown<T> {
   pub fn new(stdout: T, input: String) -> Markdown<T> {
     Markdown {
         stdout,
-        input
+        input,
+        scroll: 0,
     }
   }
     
@@ -122,30 +124,33 @@ impl<T: Write + Send > Markdown<T> {
     write!(self.stdout, "{}", termion::clear::All)?;
 
     let cd = std::env::current_dir()?;
-    let size = mdcat::TerminalSize::detect().unwrap_or_default();
-
     let mut s: Vec<u8> = Vec::default();
-    mdcat::push_tty(
-        &mut s, 
-        mdcat::TerminalCapabilities::ansi(), 
-        size,
-        parser, 
-        &cd, 
-        mdcat::ResourceAccess::LocalOnly,
-        syntax_set,
-    )?;
+    match mdcat::TerminalSize::detect() {
+        Some(size) => {
+            mdcat::push_tty(
+                &mut s, 
+                mdcat::TerminalCapabilities::ansi(), 
+                size,
+                parser, 
+                &cd, 
+                mdcat::ResourceAccess::LocalOnly,
+                syntax_set,
+            )?;
 
-    // Change \n to \n\r for New line in raw_mode.
-    let t = String::from_utf8(s)
-        .unwrap_or_default();
-    let tty = t 
-        .split('\n')
-        .map(ToString::to_string)
-        .collect::<Vec<String>>()
-        .join("\n\r");
+            // Change \n to \n\r for New line in raw_mode.
+            let t = String::from_utf8(s)
+                .unwrap_or_default();
+            let tty = t 
+                .split('\n')
+                .map(ToString::to_string)
+                .collect::<Vec<String>>()
+                .join("\n\r");
 
-    write!(self.stdout, "{}", tty)?;
+            write!(self.stdout, "{}", tty)?;
 
-    Ok(t)
+            Ok(t)
+        },
+        None => Ok(String::default())
+    }
   }
 }

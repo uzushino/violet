@@ -1,4 +1,4 @@
-
+use chrono::prelude::*;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Stdout};
 use std::os::unix::io::{FromRawFd, IntoRawFd};
@@ -8,14 +8,13 @@ use std::sync::{
 };
 use std::thread::{self, JoinHandle};
 use std::time;
-use chrono::prelude::*;
 use termion::raw::{IntoRawMode, RawTerminal};
 
 mod cursor;
-mod input;
 mod event;
-mod script;
+mod input;
 pub mod markdown;
+mod script;
 
 use event::Event;
 use input::Input;
@@ -69,13 +68,13 @@ impl App {
             self.input_handler(tx.clone());
             self.event_handler(tx.clone(), rx)
         };
-        
+
         thread::spawn(move || {
             let _ = Input::reader(tx.clone());
         });
 
         let _ = th.join();
-        
+
         let _ = self.prompt.lock().and_then(|mut f| {
             cursor::show(&mut f.stdout);
             f.flush().unwrap();
@@ -142,18 +141,18 @@ impl App {
                     Ok(Event::Reload) => {
                         let _ = prompt.lock().and_then(|mut f| {
                             f.render()
-                            .and_then(|markdown| {
-                                if latest != markdown {
-                                    let _ = tx.send(Event::Save);
-                                    latest = markdown;
-                                };
-                                f.flush()
-                            })
-                            .unwrap();
+                                .and_then(|markdown| {
+                                    if latest != markdown {
+                                        let _ = tx.send(Event::Save);
+                                        latest = markdown;
+                                    };
+                                    f.flush()
+                                })
+                                .unwrap();
                             Ok(())
                         });
                     }
-                    _ => {},
+                    _ => {}
                 };
             }
         })

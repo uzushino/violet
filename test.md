@@ -13,7 +13,8 @@ Test
 const cargo = read_to_string("./Cargo.toml");
 const version = cargo.match("version = (.+)?");
 
-println("aaa")
+println(version[1]);
+
 ```
 
 ## aa

@@ -86,15 +86,10 @@ fn run_with_server(
                 web::get().to(|data: web::Data<violet::AppData>| {
                     let markdown = {
                         let a = data.lock().unwrap();
-                        a.evaluate().unwrap()
+                        a.render_to_html().unwrap_or_default()
                     };
-                    let opts = comrak::ComrakOptions {
-                        ext_table: true,
-                        ..Default::default()
-                    };
-                    let buf = comrak::markdown_to_html(markdown.as_str(), &opts);
 
-                    HttpResponse::Ok().content_type("text/html").body(buf)
+                    HttpResponse::Ok().content_type("text/html").body(markdown)
                 }),
             )
         })
@@ -126,6 +121,5 @@ fn run_with_server(
 
 fn run(file: String, input: &str, interval: u64) -> Result<(), failure::Error> {
     let app = violet::App::new(file, input.to_string(), interval);
-
     app.run()
 }

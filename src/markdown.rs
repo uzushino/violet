@@ -145,16 +145,14 @@ impl<T: Write + Send> Markdown<T> {
         }
     }
 
-    pub fn render_to_html(&self) -> String {
-        let markdown = self.evaluate().unwrap();
-
+    pub fn render_to_html(&self) -> Result<String, failure::Error> {
+        let markdown = self.evaluate()?;
         let opts = comrak::ComrakOptions {
             ext_table: true,
             ..Default::default()
         };
+        let s = comrak::markdown_to_html(markdown.as_str(), &opts);
 
-        let buf = comrak::markdown_to_html(markdown.as_str(), &opts);
-
-        buf
+        Ok(s)
     }
 }

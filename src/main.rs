@@ -1,7 +1,6 @@
 use actix_web::{web, App, HttpResponse, HttpServer};
 use clap::{crate_version, value_t, Arg};
 use futures::future::Future;
-use std::io::Read;
 use std::thread;
 
 fn main() -> Result<(), failure::Error> {

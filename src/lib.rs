@@ -1,7 +1,5 @@
 use chrono::prelude::*;
-use std::fs::File;
-use std::io::{self, BufRead, BufReader, Stdout};
-use std::os::unix::io::{FromRawFd, IntoRawFd};
+use std::io::{self, Stdout};
 use std::sync::{
     mpsc::{self, Receiver, Sender},
     Arc, Mutex,
@@ -24,7 +22,6 @@ pub type AppData = Arc<Mutex<Markdown<RawTerminal<Stdout>>>>;
 
 pub struct App {
     file: String,
-    source: Arc<Mutex<Option<BufReader<File>>>>,
     pub prompt: AppData,
     interval: u64,
 }
@@ -39,7 +36,6 @@ pub struct AppState;
 impl App {
     pub fn new(file: String, input: String, interval: u64) -> Self {
         let stdout = io::stdout();
-        let source = source();
         let stdout = stdout.into_raw_mode().unwrap();
         let prompt = Arc::new(Mutex::new(Markdown::new(stdout, input)));
 
@@ -47,7 +43,6 @@ impl App {
             file,
             prompt,
             interval,
-            source: Arc::new(Mutex::new(source)),
         }
     }
 
@@ -64,8 +59,6 @@ impl App {
             if self.interval > 0 {
                 self.timer_handler(tx.clone());
             }
-
-            self.input_handler(tx.clone());
             self.event_handler(tx.clone(), rx)
         };
 
@@ -83,29 +76,6 @@ impl App {
         });
 
         Ok(())
-    }
-
-    pub fn input_handler(&self, tx: Sender<Event>) -> JoinHandle<()> {
-        let source = self.source.clone();
-
-        thread::spawn(move || loop {
-            let mut src = source.lock().unwrap();
-
-            if let Some(ref mut b) = *src {
-                let mut buf = vec![];
-
-                match b.read_until(b'\n', &mut buf) {
-                    Ok(n) if n != 0 => {
-                        if buf.ends_with(&[b'\n']) || buf.ends_with(&[b'\0']) {
-                            buf.pop();
-                        }
-                        let l = String::from_utf8(buf).unwrap_or(String::new());
-                        let _ = tx.send(Event::ReadLine(l));
-                    }
-                    _ => {}
-                }
-            }
-        })
     }
 
     pub fn timer_handler(&self, tx: Sender<Event>) -> JoinHandle<()> {
@@ -157,20 +127,4 @@ impl App {
             }
         })
     }
-}
-
-fn source() -> Option<BufReader<File>> {
-    unsafe {
-        let isatty = libc::isatty(libc::STDIN_FILENO as i32) != 0;
-
-        if !isatty {
-            let stdin = File::from_raw_fd(libc::dup(libc::STDIN_FILENO));
-            let file = File::open("/dev/tty").unwrap();
-            libc::dup2(file.into_raw_fd(), libc::STDIN_FILENO);
-
-            return Some(BufReader::new(stdin));
-        }
-    }
-
-    None
 }

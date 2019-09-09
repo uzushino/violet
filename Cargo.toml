@@ -5,7 +5,6 @@ authors = ["uzushino <torattoria.mamiya@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-libc = "*"
 failure = "*"
 pulldown-cmark = "0.4.1"
 comrak = "0.6.2"

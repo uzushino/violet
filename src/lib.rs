@@ -1,5 +1,5 @@
 use chrono::prelude::*;
-use std::io::{self, Stdout};
+use std::io::{self, Stdout, Write};
 use std::sync::{
     mpsc::{self, Receiver, Sender},
     Arc, Mutex,
@@ -97,6 +97,18 @@ impl App {
         thread::spawn(move || {
             loop {
                 match rx.recv() {
+                    Ok(Event::Up) => {
+                        let _ = prompt.lock().and_then(|mut f| {
+                            write!(f.stdout, "{}", termion::scroll::Up(1));
+                            Ok(())
+                        });
+                    }
+                    Ok(Event::Down) => {
+                        let _ = prompt.lock().and_then(|mut f| {
+                            write!(f.stdout, "{}", termion::scroll::Down(1));
+                            Ok(())
+                        });
+                    }
                     Ok(Event::Quit) => {
                         // Quit message.
                         break;

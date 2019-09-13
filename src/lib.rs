@@ -50,7 +50,8 @@ impl App {
         {
             let mut p = self.prompt.lock().unwrap();
             cursor::hide(&mut p.stdout);
-            p.render()?;
+            let markdown = p.to_tty()?;
+            write!(p.stdout, "{}", markdown)?;
             p.flush()?;
         }
 
@@ -122,8 +123,10 @@ impl App {
                     }
                     Ok(Event::Reload) => {
                         let _ = prompt.lock().and_then(|mut f| {
-                            f.render()
+                            f.to_tty()
                                 .and_then(|markdown| {
+                                    write!(f.stdout, "{}", markdown)?;
+
                                     if latest != markdown {
                                         let _ = tx.send(Event::Save);
                                         latest = markdown;

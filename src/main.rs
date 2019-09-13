@@ -85,7 +85,7 @@ fn run_with_server(
                 web::get().to(|data: web::Data<violet::AppData>| {
                     let markdown = {
                         let a = data.lock().unwrap();
-                        a.render_to_html().unwrap_or_default()
+                        a.to_html().unwrap_or_default()
                     };
 
                     HttpResponse::Ok().content_type("text/html").body(markdown)

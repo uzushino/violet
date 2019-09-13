@@ -107,7 +107,7 @@ impl<T: Write + Send> Markdown<T> {
         Ok(())
     }
 
-    pub fn render(&mut self) -> Result<String, failure::Error> {
+    pub fn to_tty(&mut self) -> Result<String, failure::Error> {
         let syntax_set = SyntaxSet::load_defaults_nonewlines();
         let text = self.evaluate()?;
         let parser = pulldown_cmark::Parser::new_ext(text.as_str(), make_options());
@@ -137,15 +137,13 @@ impl<T: Write + Send> Markdown<T> {
                     .collect::<Vec<String>>()
                     .join("\n\r");
 
-                write!(self.stdout, "{}", tty)?;
-
-                Ok(t)
+                Ok(tty)
             }
             None => Ok(String::default()),
         }
     }
 
-    pub fn render_to_html(&self) -> Result<String, failure::Error> {
+    pub fn to_html(&self) -> Result<String, failure::Error> {
         let markdown = self.evaluate()?;
         let opts = comrak::ComrakOptions {
             ext_table: true,

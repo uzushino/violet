@@ -1,6 +1,7 @@
 use quick_js::{Context, JsValue, ValueError};
 use std::collections::HashMap;
 use std::convert::TryFrom;
+use std::io::Read;
 
 pub struct Isolate {
     pub buf: Arc<Mutex<String>>,
@@ -83,7 +84,11 @@ impl Isolate {
             .unwrap();
         isolate
             .context
-            .add_callback("read_to_string", Self::read_to_string())
+            .add_callback("read_file", Self::read_file())
+            .unwrap();
+        isolate
+            .context
+            .add_callback("read_stdin", Self::read_stdin())
             .unwrap();
         isolate
             .context
@@ -126,10 +131,20 @@ impl Isolate {
         }
     }
 
-    fn read_to_string() -> impl Fn(String) -> JsValue {
+    fn read_file() -> impl Fn(String) -> JsValue {
         |a: String| {
             let s = std::fs::read_to_string(a).unwrap_or_default();
             JsValue::String(s)
+        }
+    }
+    
+    fn read_stdin() -> impl Fn(String) -> JsValue {
+        |a: String| {
+            let mut buf = String::default();
+            match std::io::stdin().read_to_string(&mut buf) {
+                Ok(_) => JsValue::String(buf),
+                _ => JsValue::Null
+            }
         }
     }
 

@@ -81,7 +81,6 @@ impl<T: Write + Send> Markdown<T> {
         comrak::format_commonmark(root, &ComrakOptions::default(), &mut md)?;
 
         let text = String::from_utf8(md)?.replace("&#10;", "\n");
-
         Ok(text)
     }
 

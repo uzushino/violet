@@ -138,8 +138,8 @@ impl Isolate {
         }
     }
     
-    fn read_stdin() -> impl Fn(String) -> JsValue {
-        |a: String| {
+    fn read_stdin() -> impl Fn() -> JsValue {
+        || {
             let mut buf = String::default();
             match std::io::stdin().read_to_string(&mut buf) {
                 Ok(_) => JsValue::String(buf),

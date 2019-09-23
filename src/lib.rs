@@ -24,6 +24,7 @@ pub struct App {
     file: String,
     pub prompt: AppData,
     interval: u64,
+    auto_save: bool,
 }
 
 pub enum Action {
@@ -34,7 +35,7 @@ pub enum Action {
 pub struct AppState;
 
 impl App {
-    pub fn new(file: String, input: String, interval: u64) -> Self {
+    pub fn new(file: String, input: String, auto_save: bool, interval: u64) -> Self {
         let stdout = io::stdout();
         let stdout = stdout.into_raw_mode().unwrap();
         let prompt = Arc::new(Mutex::new(Markdown::new(stdout, input)));
@@ -43,6 +44,7 @@ impl App {
             file,
             prompt,
             interval,
+            auto_save,
         }
     }
 

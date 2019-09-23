@@ -120,7 +120,7 @@ impl<T: Write + Send> Markdown<T> {
             Some(size) => {
                 mdcat::push_tty(
                     &mut s,
-                    mdcat::TerminalCapabilities::ansi(),
+                    mdcat::TerminalCapabilities::none(),
                     size,
                     parser,
                     &cd,

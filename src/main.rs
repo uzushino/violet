@@ -50,6 +50,7 @@ fn main() -> Result<(), failure::Error> {
 
     let interval = value_t!(matches, "INTERVAL", u64).unwrap_or(0);
     let file = value_t!(matches, "FILE", String).unwrap();
+    let auto_save = value_t!(matches, "AUTO_SAVE", bool).unwrap();
     let input = std::fs::read_to_string(file.clone()).unwrap();
 
     if matches.is_present("SERVER") {
@@ -57,9 +58,9 @@ fn main() -> Result<(), failure::Error> {
         let host = value_t!(matches, "HOST", String).unwrap_or("127.0.0.1".to_owned());
         let bind_addr = format!("{}:{}", host, port);
 
-        run_with_server(file, input.as_str(), interval, bind_addr)?;
+        run_with_server(file, input.as_str(), auto_save, interval, bind_addr)?;
     } else {
-        run(file, input.as_str(), interval)?;
+        run(file, input.as_str(), auto_save, interval)?;
     }
 
     Ok(())
@@ -68,10 +69,11 @@ fn main() -> Result<(), failure::Error> {
 fn run_with_server(
     file: String,
     input: &str,
+    auto_save: bool,
     interval: u64,
     bind_addr: String,
 ) -> Result<(), failure::Error> {
-    let app = violet::App::new(file, input.to_string(), interval);
+    let app = violet::App::new(file, input.to_string(), auto_save, interval);
 
     let p = app.prompt.clone();
     let (tx, rx) = std::sync::mpsc::channel();
@@ -118,7 +120,7 @@ fn run_with_server(
     Ok(())
 }
 
-fn run(file: String, input: &str, interval: u64) -> Result<(), failure::Error> {
-    let app = violet::App::new(file, input.to_string(), interval);
+fn run(file: String, input: &str, auto_save: bool, interval: u64) -> Result<(), failure::Error> {
+    let app = violet::App::new(file, input.to_string(), auto_save, interval);
     app.run()
 }

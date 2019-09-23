@@ -96,6 +96,7 @@ impl App {
         let prompt = self.prompt.clone();
         let file = self.file.clone();
         let mut latest = String::default();
+        let auto_save = self.auto_save;
 
         thread::spawn(move || {
             loop {
@@ -128,11 +129,14 @@ impl App {
                             f.to_tty()
                                 .and_then(|markdown| {
                                     write!(f.stdout, "{}", markdown)?;
+                                    
+                                    if auto_save {
+                                        if latest != markdown {
+                                            let _ = tx.send(Event::Save);
+                                            latest = markdown;
+                                        }
+                                    }
 
-                                    if latest != markdown {
-                                        let _ = tx.send(Event::Save);
-                                        latest = markdown;
-                                    };
                                     f.flush()
                                 })
                                 .unwrap();

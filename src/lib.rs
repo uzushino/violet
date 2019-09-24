@@ -10,7 +10,7 @@ use termion::raw::{IntoRawMode, RawTerminal};
 
 mod cursor;
 mod event;
-mod input;
+pub mod input;
 pub mod markdown;
 mod script;
 

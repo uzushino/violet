@@ -28,3 +28,6 @@ const tbl = table([
 
 println(tbl)
 ```
+
+- [ ] aaaa
+- [x] bbbb

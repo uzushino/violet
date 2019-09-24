@@ -50,7 +50,7 @@ fn main() -> Result<(), failure::Error> {
 
     let interval = value_t!(matches, "INTERVAL", u64).unwrap_or(0);
     let file = value_t!(matches, "FILE", String).unwrap();
-    let auto_save = value_t!(matches, "AUTO_SAVE", bool).unwrap();
+    let auto_save = value_t!(matches, "AUTO_SAVE", bool).unwrap_or(false);
     let input = std::fs::read_to_string(file.clone()).unwrap();
 
     if matches.is_present("SERVER") {
@@ -74,7 +74,6 @@ fn run_with_server(
     bind_addr: String,
 ) -> Result<(), failure::Error> {
     let app = violet::App::new(file, input.to_string(), auto_save, interval);
-
     let p = app.prompt.clone();
     let (tx, rx) = std::sync::mpsc::channel();
 
@@ -112,7 +111,6 @@ fn run_with_server(
         .and_then(|f| {
             // manually out of raw mode.
             f.stdout.suspend_raw_mode().unwrap();
-
             Ok(())
         })
         .unwrap();

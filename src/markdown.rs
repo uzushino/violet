@@ -56,7 +56,6 @@ impl<T: Write + Send> Markdown<T> {
         A: Fn(String) -> String,
     {
         let arena = Arena::new();
-
         let root = parse_document(&arena, self.input.as_str(), &ComrakOptions::default());
 
         iter_nodes(root, &|node| {
@@ -77,7 +76,6 @@ impl<T: Write + Send> Markdown<T> {
         });
 
         let mut md = vec![];
-
         comrak::format_commonmark(root, &ComrakOptions::default(), &mut md)?;
 
         let text = String::from_utf8(md)?.replace("&#10;", "\n");
@@ -146,6 +144,7 @@ impl<T: Write + Send> Markdown<T> {
         let markdown = self.evaluate()?;
         let opts = comrak::ComrakOptions {
             ext_table: true,
+            ext_tasklist: true,
             ..Default::default()
         };
         let s = comrak::markdown_to_html(markdown.as_str(), &opts);

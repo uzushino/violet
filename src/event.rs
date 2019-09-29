@@ -1,3 +1,4 @@
+#[derive(PartialEq)]
 pub enum Event {
     Key(char),
     ReadLine(String),

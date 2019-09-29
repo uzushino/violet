@@ -102,40 +102,39 @@ impl App {
             loop {
                 let result = rx.recv().map(|evt| {
                     let mut f = prompt.lock().unwrap();
-
-                    match evt {
-                        Event::Up => {
-                            write!(f.stdout, "{}", termion::scroll::Up(1));
-                            true
-                        }
-                        Event::Down => {
-                            write!(f.stdout, "{}", termion::scroll::Down(1));
-                            true
-                        }
-                        Event::Quit => false,
-                        Event::Save => {
-                            let now = Utc::now().format("%Y-%m-%dT%H:%M:%SZ");
-                            let _ = f.save_as(format!("{}_{}.md", now, file).as_str());
-                            true
-                        }
-                        Event::Reload => {
-                            f.to_tty()
-                                .and_then(|markdown| {
-                                    write!(f.stdout, "{}", markdown)?;
-                                    
-                                    if auto_save {
-                                        if latest != markdown {
-                                            let _ = tx.send(Event::Save);
-                                            latest = markdown;
+                    if Event::Quit == evt {
+                        false
+                    } else {
+                        match evt {
+                            Event::Up => {
+                                write!(f.stdout, "{}", termion::scroll::Up(1));
+                            }
+                            Event::Down => {
+                                write!(f.stdout, "{}", termion::scroll::Down(1));
+                            }
+                            Event::Save => {
+                                let now = Utc::now().format("%Y-%m-%dT%H:%M:%SZ");
+                                let _ = f.save_as(format!("{}_{}.md", now, file).as_str());
+                            }
+                            Event::Reload => {
+                                f.to_tty()
+                                    .and_then(|markdown| {
+                                        write!(f.stdout, "{}", markdown)?;
+                                        
+                                        if auto_save {
+                                            if latest != markdown {
+                                                let _ = tx.send(Event::Save);
+                                                latest = markdown;
+                                            }
                                         }
-                                    }
 
-                                    f.flush()
-                                })
-                                .unwrap();
-                            true
-                        }
-                        _ => true
+                                        f.flush()
+                                    })
+                                    .unwrap();
+                            }
+                            _ => (),
+                        };
+                        true
                     }
                 });
                 

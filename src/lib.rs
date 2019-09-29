@@ -100,32 +100,25 @@ impl App {
 
         thread::spawn(move || {
             loop {
-                match rx.recv() {
-                    Ok(Event::Up) => {
-                        let _ = prompt.lock().and_then(|mut f| {
+                let result = rx.recv().map(|evt| {
+                    let mut f = prompt.lock().unwrap();
+
+                    match evt {
+                        Event::Up => {
                             write!(f.stdout, "{}", termion::scroll::Up(1));
-                            Ok(())
-                        });
-                    }
-                    Ok(Event::Down) => {
-                        let _ = prompt.lock().and_then(|mut f| {
+                            true
+                        }
+                        Event::Down => {
                             write!(f.stdout, "{}", termion::scroll::Down(1));
-                            Ok(())
-                        });
-                    }
-                    Ok(Event::Quit) => {
-                        // Quit message.
-                        break;
-                    }
-                    Ok(Event::Save) => {
-                        let _ = prompt.lock().and_then(|f| {
+                            true
+                        }
+                        Event::Quit => false,
+                        Event::Save => {
                             let now = Utc::now().format("%Y-%m-%dT%H:%M:%SZ");
                             let _ = f.save_as(format!("{}_{}.md", now, file).as_str());
-                            Ok(())
-                        });
-                    }
-                    Ok(Event::Reload) => {
-                        let _ = prompt.lock().and_then(|mut f| {
+                            true
+                        }
+                        Event::Reload => {
                             f.to_tty()
                                 .and_then(|markdown| {
                                     write!(f.stdout, "{}", markdown)?;
@@ -140,11 +133,15 @@ impl App {
                                     f.flush()
                                 })
                                 .unwrap();
-                            Ok(())
-                        });
+                            true
+                        }
+                        _ => true
                     }
-                    _ => {}
-                };
+                });
+                
+                if let Ok(false) = result {
+                    break;
+                }
             }
         })
     }

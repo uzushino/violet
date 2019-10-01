@@ -34,15 +34,13 @@ pub fn make_options() -> Options {
 pub struct Markdown<T: Write> {
     pub stdout: T,
     pub input: String,
-    scroll: u64,
 }
 
 impl<T: Write + Send> Markdown<T> {
-    pub fn new(stdout: T, input: String) -> Markdown<T> {
+    pub fn new(stdout: T, input: impl ToString) -> Markdown<T> {
         Markdown {
             stdout,
-            input,
-            scroll: 0,
+            input: input.to_string(),
         }
     }
 
@@ -150,5 +148,16 @@ impl<T: Write + Send> Markdown<T> {
         let s = comrak::markdown_to_html(markdown.as_str(), &opts);
 
         Ok(s)
+    }
+}
+
+mod tests {
+    use super::Markdown;
+
+    #[test]
+    fn to_html() {
+        let markdown = Markdown::new(std::io::stdout(), "# test");
+        let actual = markdown.to_html().unwrap();
+        assert_eq!("<h1>test</h1>", actual.trim_right());
     }
 }

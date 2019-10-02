@@ -158,6 +158,6 @@ mod tests {
     fn to_html() {
         let markdown = Markdown::new(std::io::stdout(), "# test");
         let actual = markdown.to_html().unwrap();
-        assert_eq!("<h1>test</h1>", actual.trim_right());
+        assert_eq!("<h1>test</h1>", actual.trim_end());
     }
 }

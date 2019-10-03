@@ -88,6 +88,7 @@ impl<T: Write + Send> Markdown<T> {
                 let mut buf = isolate.buf.lock().unwrap();
                 *buf = String::default();
             }
+
             isolate.eval(script).unwrap()
         })
     }
@@ -155,9 +156,22 @@ mod tests {
     use super::Markdown;
 
     #[test]
+    fn evaluate() {
+        let markdown = Markdown::new(std::io::stdout(), "
+# test
+```violet
+println('aaa')
+```");
+        let actual = markdown.evaluate().unwrap();
+        
+        assert_eq!("# test\n\naaa", actual.trim_end());
+    }
+
+    #[test]
     fn to_html() {
         let markdown = Markdown::new(std::io::stdout(), "# test");
         let actual = markdown.to_html().unwrap();
+
         assert_eq!("<h1>test</h1>", actual.trim_end());
     }
 }

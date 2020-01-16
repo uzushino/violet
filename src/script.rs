@@ -1,200 +1,74 @@
-use quick_js::{Context, JsValue, ValueError};
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::io::Read;
+use std::sync::*;
+
+use boa::realm::Realm;  
+use boa::exec::Executor;
+
+use boa::{
+    builtins::{
+        function::NativeFunctionData,
+        object::{Object, ObjectKind, PROTOTYPE},
+        value::{to_value, ResultValue, Value, ValueData},
+    },
+    exec::Interpreter,
+};
+macro_rules! make_builtin_fn {
+    ($fn:ident, named $name:expr, with length $l:tt, of $p:ident) => {
+        let $fn = to_value($fn as NativeFunctionData);
+        $fn.set_field_slice("length", to_value($l));
+        $p.set_field_slice($name, $fn);
+    };
+    ($fn:ident, named $name:expr, of $p:ident) => {
+        make_builtin_fn!($fn, named $name, with length 0, of $p);
+    };
+}
+
+pub fn table(_: &Value, args: &[Value], _: &mut Interpreter) -> ResultValue {
+    Ok(to_value(1234))
+}
+
+
+fn create_constructor(global: &Value) -> Value {
+    let module = ValueData::new_obj(Some(global));
+
+    make_builtin_fn!(table, named "table", with length 1, of module);
+    
+   module 
+}
+
 
 pub struct Isolate {
     pub buf: Arc<Mutex<String>>,
-    context: quick_js::Context,
-}
-
-use std::sync::*;
-
-type CallbackResult = std::sync::Arc<std::sync::Mutex<std::string::String>>;
-
-struct MapWrap(pub HashMap<String, JsValue>);
-
-impl TryFrom<JsValue> for MapWrap {
-    type Error = ValueError;
-
-    fn try_from(value: JsValue) -> Result<Self, Self::Error> {
-        match value {
-            JsValue::Object(v) => Ok(MapWrap(v)),
-            _ => Err(ValueError::UnexpectedType),
-        }
-    }
-}
-
-struct VecMapWrap(pub Vec<MapWrap>);
-
-impl TryFrom<JsValue> for VecMapWrap {
-    type Error = ValueError;
-
-    fn try_from(value: JsValue) -> Result<Self, Self::Error> {
-        match value {
-            JsValue::Array(a) => {
-                let v = a
-                    .into_iter()
-                    .map(|v| TryFrom::try_from(v).unwrap())
-                    .collect::<Vec<MapWrap>>();
-                Ok(VecMapWrap(v))
-            }
-            _ => Err(ValueError::UnexpectedType),
-        }
-    }
-}
-
-struct VecString(pub Vec<String>);
-
-impl TryFrom<JsValue> for VecString {
-    type Error = ValueError;
-
-    fn try_from(value: JsValue) -> Result<Self, Self::Error> {
-        match value {
-            JsValue::Array(a) => {
-                let v = a
-                    .into_iter()
-                    .map(|v| v.into_string().unwrap())
-                    .collect::<Vec<String>>();
-
-                Ok(VecString(v))
-            }
-            _ => Err(ValueError::UnexpectedType),
-        }
-    }
 }
 
 impl Isolate {
-    pub fn new() -> Result<Self, quick_js::ContextError> {
-        let context = Context::new()?;
+    pub fn new() -> Self {
         let buf = Arc::new(Mutex::new(String::default()));
-        let isolate = Isolate { context, buf };
 
-        {
-            let b = Arc::clone(&isolate.buf);
-            isolate
-                .context
-                .add_callback("println", Self::println(b.clone()))
-                .unwrap();
-        }
-
-        isolate
-            .context
-            .add_callback("write_to_file", Self::write_file())
-            .unwrap();
-        isolate
-            .context
-            .add_callback("read_file", Self::read_file())
-            .unwrap();
-        isolate
-            .context
-            .add_callback("read_stdin", Self::read_stdin())
-            .unwrap();
-        isolate
-            .context
-            .add_callback("table", Self::table())
-            .unwrap();
-        isolate
-            .context
-            .add_callback("command", Self::run_command())
-            .unwrap();
-        isolate
-            .context
-            .add_callback("get", Self::get_request())
-            .unwrap();
-
-        Ok(isolate)
-    }
-
-    fn println(b: CallbackResult) -> impl Fn(String) -> JsValue {
-        move |a: String| {
-            let mut c = b.lock().unwrap();
-
-            (*c).push_str(a.as_str());
-            (*c).push_str("\n");
-
-            JsValue::Null
+        /*
+        let engine = &mut Executor::new(realm);
+        let a = boa::forward_val(engine, "Violet.table(1)");
+        */
+         
+        Self {
+            buf
         }
     }
 
-    fn get_request() -> impl Fn(String) -> JsValue {
-        |url: String| {
-            let mut resp = reqwest::get(url.as_str()).unwrap();
-            JsValue::String(resp.text().unwrap())
-        }
-    }
 
-    fn write_file() -> impl Fn(String, String) -> JsValue {
-        |a: String, b: String| {
-            std::fs::write(a, b).unwrap();
-            JsValue::Null
-        }
-    }
+    pub fn eval<A: Into<String>>(&self, script: A) -> Result<String, ()> {
+        let realm = Realm::create();
+        let global = &realm.global_obj;
 
-    fn read_file() -> impl Fn(String) -> JsValue {
-        |a: String| {
-            let s = std::fs::read_to_string(a).unwrap_or_default();
-            JsValue::String(s)
-        }
-    }
-    
-    fn read_stdin() -> impl Fn() -> JsValue {
-        || {
-            let mut buf = String::default();
-            match std::io::stdin().read_to_string(&mut buf) {
-                Ok(_) => JsValue::String(buf),
-                _ => JsValue::Null
-            }
-        }
-    }
+        global.set_field_slice(
+            "Violet", create_constructor(global)
+        );
 
-    fn run_command() -> impl Fn(String, VecString) -> JsValue {
-        |cmd: String, args: VecString| {
-            let out = std::process::Command::new(cmd)
-                .args(args.0.as_slice())
-                .output()
-                .unwrap()
-                .stdout;
+        let engine = &mut Executor::new(realm);
+        let a = boa::forward_val(engine, script.into().as_str());
 
-            JsValue::String(String::from_utf8(out).unwrap())
-        }
-    }
-
-    fn table() -> impl Fn(VecMapWrap) -> JsValue {
-        |b: VecMapWrap| {
-            let mut rows = Vec::new();
-            for m in b.0.iter() {
-                let mut row = linked_hash_map::LinkedHashMap::new();
-
-                for (k, v) in m.0.clone() {
-                    let s = match v {
-                        JsValue::String(s) => s.to_string(),
-                        JsValue::Int(i) => i.to_string(),
-                        JsValue::Float(f) => f.to_string(),
-                        _ => "".to_string(),
-                    };
-
-                    row.insert(k.to_string(), s);
-                }
-
-                rows.push(row);
-            }
-
-            let opt = madato::types::RenderOptions {
-                headings: None,
-                ..Default::default()
-            };
-
-            let table = madato::mk_table(rows.as_slice(), &Some(opt));
-
-            JsValue::String(format!("\n{}\n", table))
-        }
-    }
-
-    pub fn eval<A: Into<String>>(&self, script: A) -> Result<String, quick_js::ExecutionError> {
-        let _ = self.context.eval_as::<String>(script.into().as_str());
-        let s = self.buf.lock().unwrap();
-
-        Ok(s.to_string())
+        Ok(a.unwrap().to_string())
     }
 }

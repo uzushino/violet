@@ -81,15 +81,16 @@ impl<T: Write + Send> Markdown<T> {
     }
 
     pub fn evaluate(&self) -> Result<String, failure::Error> {
-        let isolate = Isolate::new()?;
-
+        let isolate = Isolate::new();
+        
         self.parse(move |script| {
             {
                 let mut buf = isolate.buf.lock().unwrap();
                 *buf = String::default();
             }
 
-            isolate.eval(script).unwrap()
+            isolate.eval(script).unwrap_or_default()
+            //String::default()
         })
     }
 

@@ -90,7 +90,6 @@ impl<T: Write + Send> Markdown<T> {
             }
 
             isolate.eval(script).unwrap_or_default()
-            //String::default()
         })
     }
 

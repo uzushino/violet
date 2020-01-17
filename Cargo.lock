@@ -2545,6 +2545,7 @@ dependencies = [
  "env_logger 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.1.28 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gc 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "linked-hash-map 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "madato 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "mdcat 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)",

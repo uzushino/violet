@@ -13,6 +13,7 @@ mod event;
 pub mod input;
 pub mod markdown;
 mod script;
+mod builtin;
 
 use event::Event;
 use input::Input;

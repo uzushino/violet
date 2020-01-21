@@ -1,4 +1,7 @@
 use std::io::Read;
+use futures::Future;
+use sqlx::mysql;
+use futures::executor;
 
 use boa::{
     builtins::{
@@ -10,21 +13,18 @@ use boa::{
 
 use crate::make_builtin_fn;
 
-
-pub fn stdin(_this: &Value, _args: &[Value], _: &mut Interpreter) -> ResultValue {
-    let mut buf = String::default();
-
-    match std::io::stdin().read_to_string(&mut buf) {
-        Ok(_) => Ok(to_value(buf)),
-        _ => Ok(gc::Gc::new(ValueData::Null))
-    }
+pub fn connection(_this: &Value, _args: &[Value], _: &mut Interpreter) -> ResultValue {
+    let pool = sqlx::MySqlPool::new("");
+    let pool = executor::block_on(pool).unwrap();
+    
+    Ok(gc::Gc::new(ValueData::Number(&pool as *const _ as usize as f64)))
 }
 
 pub fn create_constructor(global: &Value) -> Value {
     let module = ValueData::new_obj(Some(global));
 
     //make_builtin_fn!(table, named "table", with length 1, of module);
-    make_builtin_fn!(stdin, named "stdin", of module);
+    make_builtin_fn!(connection, named "connection", of module);
  
    module 
 }

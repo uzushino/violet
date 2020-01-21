@@ -54,7 +54,9 @@ impl App {
             let mut p = self.prompt.lock().unwrap();
             cursor::hide(&mut p.stdout);
             let markdown = p.to_tty()?;
+
             write!(p.stdout, "{}", markdown)?;
+
             p.flush()?;
         }
 

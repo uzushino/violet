@@ -84,10 +84,12 @@ impl<T: Write + Send> Markdown<T> {
         let isolate = Isolate::new();
         
         self.parse(move |script| {
+            /*
             {
                 let mut buf = isolate.buf.lock().unwrap();
                 *buf = String::default();
             }
+            */
 
             isolate.eval(script).unwrap_or_default()
         })

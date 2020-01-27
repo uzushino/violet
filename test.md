@@ -10,7 +10,13 @@ Test
 
 ```violet
 
-Violet.table(1)
+const db = Mysql.connection(
+    "mysql://root:password@127.0.0.1/violet"
+);
+const row = Mysql.query(
+    ["int", "string"], 
+    "SELECT id, name from users"
+);
 
 ```
 - [ ] aaaa

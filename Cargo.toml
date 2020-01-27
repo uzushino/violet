@@ -6,6 +6,8 @@ edition = "2018"
 
 [dependencies]
 failure = "*"
+anyhow = "1.0"
+
 pulldown-cmark = "0.4.1"
 comrak = "0.6.2"
 mdcat = "0.13.0"
@@ -21,4 +23,7 @@ reqwest = "*"
 Boa = "0.5.1"
 gc = "*"
 rand = "0.7.2"
-sqlx = { version = "*", features = [ "mysql" ] }
+sqlx = { version = "0.2.4", features = [ "mysql" ] }
+lazy_static = "*"
+futures-core = { version = "0.3.1", default-features = false }
+futures-util = { version = "0.3.1", default-features = false }

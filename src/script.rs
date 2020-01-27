@@ -25,6 +25,9 @@ impl Isolate {
         global.set_field_slice(
             "Violet", builtin::core::create_constructor(global)
         );
+        global.set_field_slice(
+            "Mysql", builtin::mysql::create_constructor(global)
+        );
 
         let engine = &mut Executor::new(realm);
         let a = boa::forward_val(engine, script.into().as_str());

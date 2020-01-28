@@ -1,27 +1,30 @@
-use sqlx::row::Row;
-use sqlx::mysql::MySqlRow;
-use sqlx::pool::Pool;
-use sqlx::mysql::MySqlConnection;
-use futures::executor;
-use sqlx::row::RowIndex;
-use sqlx::result_ext::ResultExt;
-use std::ops::Deref;
+use std::ops::{Deref, Index};
 use std::borrow::Borrow;
-use std::ops::Index;
+use std::sync::{Arc, Mutex};
 
+use futures::executor;
+
+use sqlx::{ 
+    row::{ RowIndex, Row },
+    pool::Pool,
+    mysql::MySqlConnection,
+    result_ext::ResultExt
+};
 
 use boa::{
     builtins::{
-        object::ObjectKind,
         function::NativeFunctionData,
         value::{from_value, to_value, ResultValue, Value, ValueData},
     },
     exec::Interpreter,
 };
+
 use lazy_static::lazy_static;
 
-use crate::make_builtin_fn;
-use std::sync::{Arc, Mutex};
+use crate::{ 
+    make_builtin_fn,
+    builtin::value_to_vector
+};
 
 lazy_static! {
     static ref GLOBAL: Arc<Mutex<Option<Pool<MySqlConnection>>>> = 
@@ -35,32 +38,6 @@ pub fn connection(_this: &Value, args: &[Value], _: &mut Interpreter) -> ResultV
     *conn = Some(executor::block_on(pool).unwrap());
 
     Ok(gc::Gc::new(ValueData::Null))
-}
-
-fn value_to_vector(value: &ValueData) -> anyhow::Result<Vec<String>> {
-    match value.deref().borrow() {
-        &ValueData::Object(ref x) => {
-            if  x.deref().borrow().kind != ObjectKind::Array {
-                return Ok(Vec::default());
-            }
-
-            if let ValueData::Integer(length) = *value.get_field_slice("length").deref().borrow() {
-                let values = (0..length)
-                    .map(|idx| value.get_field_slice(&idx.to_string()))
-                    .map(|data| {
-                        match data.deref().borrow() {
-                            ValueData::String(s) => s.to_string(),
-                            _ => String::default(),
-                        }
-                    })
-                    .collect::<Vec<String>>();
-                return Ok(values);
-            }
-
-            Ok(Vec::default())
-        },
-        _ => Ok(Vec::default()),
-    }
 }
 
 fn value_to_argument(types: &Value, sql: &Value) -> anyhow::Result<(Vec<String>, String)> {

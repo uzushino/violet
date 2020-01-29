@@ -39,6 +39,15 @@ pub fn value_to_vector(value: &ValueData) -> anyhow::Result<Vec<String>> {
                     .map(|data| {
                         match data.deref().borrow() {
                             ValueData::String(s) => s.to_string(),
+                            ValueData::Number(n) => n.to_string(),
+                            ValueData::Null => "<NULL>".to_string(),
+                            ValueData::Boolean(b) => {
+                                if *b {
+                                    "TRUE".to_string()
+                                } else {
+                                    "FALSE".to_string()
+                                }
+                            },
                             _ => String::default(),
                         }
                     })

@@ -7,6 +7,7 @@ edition = "2018"
 [dependencies]
 failure = "*"
 anyhow = "1.0"
+serde_json = "^1.0.40"
 
 pulldown-cmark = "0.4.1"
 comrak = "0.6.2"

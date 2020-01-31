@@ -13,10 +13,15 @@ Test
 const db = Mysql.connection(
     "mysql://root:password@127.0.0.1/violet"
 );
+
 const row = Mysql.query(
     ["int", "string"], 
     "SELECT id, name from users"
 );
+
+Violet.table([
+    {"aaa": 1}
+])
 
 ```
 - [ ] aaaa

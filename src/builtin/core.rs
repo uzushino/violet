@@ -58,22 +58,31 @@ fn value_to_map(obj: &gc::GcCell<Object>) -> HashMap<String, String> {
 pub fn table(_this: &Value, args: &[Value], _: &mut Interpreter) -> ResultValue {
     let args = args.get(0).ok_or(ValueData::Null)
         .map_err(|_| anyhow::Error::msg("Could not get 1st argument.")).unwrap();
+    
+    if let ValueData::Integer(length) = *args.get_field_slice("length").deref().borrow() {
+        let arr = (0..length)
+            .map(|idx| args.get_field_slice(&idx.to_string()))
+            .map(|row| {
+                match row.deref().borrow() {
+                    &ValueData::Object(ref obj) => {
+                        value_to_map(obj)
+                    },
+                    _ => HashMap::default()
+                }
+            }).collect::<Vec<_>>();
+        dbg!(&arr);
 
-    let mut arr = Vec::default();
-    match args.deref().borrow() {
-        &ValueData::Object(ref obj) => {
-            let new_obj = value_to_map(obj);
-            arr.push(new_obj)
-        },
-        _ => {}
+        let opt = madato::types::RenderOptions {
+            headings: None,
+            ..Default::default()
+        };
+        
+        let _table = madato::mk_table(arr.as_slice(), &Some(opt));
+
+        dbg!(_table);
     }
 
-    let opt = madato::types::RenderOptions {
-        headings: None,
-        ..Default::default()
-    };
-    
-    let _table = madato::mk_table(arr.as_slice(), &Some(opt));
+    panic!();
 
     Ok(gc::Gc::new(ValueData::Null))
 }

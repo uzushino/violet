@@ -32,8 +32,10 @@ pub fn stdin(_this: &Value, _args: &[Value], _: &mut Interpreter) -> ResultValue
 fn value_to_map(obj: &gc::GcCell<Object>) -> HashMap<String, String> {
     let mut new_obj = HashMap::new();
 
-    for (k, v) in obj.borrow().internal_slots.iter() {
-        if k != INSTANCE_PROTOTYPE {
+    for (k, property) in obj.borrow().properties.iter() {
+        let value = property.value.as_ref();
+
+        if let Some(v) = value {
             let s = match v.deref().borrow() {
                 ValueData::String(s) => s.to_string(),
                 ValueData::Number(n) => n.to_string(),
@@ -47,7 +49,6 @@ fn value_to_map(obj: &gc::GcCell<Object>) -> HashMap<String, String> {
                 },
                 _ => String::default(),
             };
-
             new_obj.insert(k.clone(), s);
         }
     }
@@ -58,7 +59,7 @@ fn value_to_map(obj: &gc::GcCell<Object>) -> HashMap<String, String> {
 pub fn table(_this: &Value, args: &[Value], _: &mut Interpreter) -> ResultValue {
     let args = args.get(0).ok_or(ValueData::Null)
         .map_err(|_| anyhow::Error::msg("Could not get 1st argument.")).unwrap();
-    
+
     if let ValueData::Integer(length) = *args.get_field_slice("length").deref().borrow() {
         let arr = (0..length)
             .map(|idx| args.get_field_slice(&idx.to_string()))

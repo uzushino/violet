@@ -1,24 +1,19 @@
-use std::io::Read;
 use std::{
-    ops::{Deref, DerefMut},
+    borrow::Borrow,
+    io::Read,
+    ops::Deref,
 };
 use linked_hash_map::LinkedHashMap as HashMap;
-use std::borrow::Borrow;
 use boa::{
     builtins::{
         function::NativeFunctionData,
         value::{to_value, ResultValue, Value, ValueData},
-        object::{InternalState, InternalStateCell, Object, ObjectKind, INSTANCE_PROTOTYPE, PROTOTYPE},
+        object::Object,
     },
     exec::Interpreter,
 };
 
-use crate::{ 
-    make_builtin_fn, 
-    builtin::value_to_vector 
-};
-
-use serde_json::{map::Map, Number as JSONNumber, Value as JSONValue};
+use crate::make_builtin_fn;
 
 pub fn stdin(_this: &Value, _args: &[Value], _: &mut Interpreter) -> ResultValue {
     let mut buf = String::default();
@@ -60,6 +55,8 @@ pub fn table(_this: &Value, args: &[Value], _: &mut Interpreter) -> ResultValue 
     let args = args.get(0).ok_or(ValueData::Null)
         .map_err(|_| anyhow::Error::msg("Could not get 1st argument.")).unwrap();
 
+    let mut table = String::default();
+
     if let ValueData::Integer(length) = *args.get_field_slice("length").deref().borrow() {
         let arr = (0..length)
             .map(|idx| args.get_field_slice(&idx.to_string()))
@@ -71,21 +68,16 @@ pub fn table(_this: &Value, args: &[Value], _: &mut Interpreter) -> ResultValue 
                     _ => HashMap::default()
                 }
             }).collect::<Vec<_>>();
-        dbg!(&arr);
-
+        
         let opt = madato::types::RenderOptions {
             headings: None,
             ..Default::default()
         };
         
-        let _table = madato::mk_table(arr.as_slice(), &Some(opt));
-
-        dbg!(_table);
+        table = madato::mk_table(arr.as_slice(), &Some(opt));
     }
 
-    panic!();
-
-    Ok(gc::Gc::new(ValueData::Null))
+    Ok(gc::Gc::new(ValueData::String(table)))
 }
 
 pub fn create_constructor(global: &Value) -> Value {

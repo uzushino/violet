@@ -71,18 +71,18 @@ pub fn _query(_this: &Value, args: &[Value], _: &mut Interpreter) -> anyhow::Res
             for i in 0..row.len()  {
                 let typ = types.index(i);
                 let v = match typ.as_str() {
-                    "int" => {
-                        let v: sqlx::Result<i32> = i.try_get(&row).try_unwrap_optional();
-                        v.unwrap().to_string()
-                    },
-                    "string" => {
-                        let v: sqlx::Result<String> = i.try_get(&row).try_unwrap_optional();
-                        v.unwrap().to_string()
-                    },
-                    _ => String::default()
+                    "int" => i.try_get(&row).map(|i: i32| i.to_string()),
+                    "string" => i.try_get(&row).map(|v: String| v.to_string()),
+                    "bool" => i.try_get(&row).map(|b: bool| {
+                        if b {
+                            return "True".to_string();
+                        }
+                        "False".to_string()
+                    }),
+                    _ => Ok(String::default())
                 };
 
-                h.push(v);
+                h.push(v.unwrap_or_default());
             }
 
             future::ready(())

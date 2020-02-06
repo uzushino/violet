@@ -1,14 +1,13 @@
 use std::ops::{Deref, Index};
 use std::borrow::Borrow;
 use std::sync::{Arc, Mutex};
-
+use std::collections::HashMap;
 use futures::executor;
 
 use sqlx::{ 
-    row::{ RowIndex, Row },
+    row::{ Row, RowIndex },
     pool::Pool,
-    mysql::MySqlConnection,
-    result_ext::ResultExt
+    mysql::{ MySqlConnection }
 };
 
 use boa::{
@@ -40,33 +39,36 @@ pub fn connection(_this: &Value, args: &[Value], _: &mut Interpreter) -> ResultV
     Ok(gc::Gc::new(ValueData::Null))
 }
 
-fn value_to_argument(types: &Value, sql: &Value) -> anyhow::Result<(Vec<String>, String)> {
+fn value_to_argument(names:&Value, types: &Value, sql: &Value) -> anyhow::Result<(Vec<String>, Vec<String>, String)> {
+    let names = value_to_vector(names.deref())?;
     let types = value_to_vector(types.deref())?;
     let sql = from_value::<String>(sql.borrow().clone())
         .map_err(anyhow::Error::msg)?;
 
-    Ok((types, sql))
+    Ok((names, types, sql))
 }
 
 use futures::prelude::*;
 
-//pub fn query(_this: &Value, args: &[Value], _: &mut Interpreter) -> ResultValue {
 pub fn _query(_this: &Value, args: &[Value], _: &mut Interpreter) -> anyhow::Result<Value> {
     let args0 = args.get(0).ok_or(ValueData::Null)
         .map_err(|_| anyhow::Error::msg("Could not get 1st argument."))?;
-    let args1 = args.get(1).ok_or(ValueData::Null)
+    let args1 = args.get(0).ok_or(ValueData::Null)
         .map_err(|_| anyhow::Error::msg("Could not get 2nd argument."))?;
-    let (types, sql) = value_to_argument(args0, args1)?;
+    let args2 = args.get(1).ok_or(ValueData::Null)
+        .map_err(|_| anyhow::Error::msg("Could not get 3rd argument."))?;
+
+    let (types, sql) = value_to_argument(args0, args1, args3)?;
 
     let ref mut conn = GLOBAL.lock().unwrap();
     let conn = &mut conn.as_ref().unwrap();
-
     let mut h: Vec<String> = Vec::new();
 
     let fut = sqlx::query(sql.as_str())
         .fetch(conn)
-        .for_each(|task| {
-            let row = task.unwrap();
+        .for_each(|row| {
+            let row = row.unwrap();
+            let m: HashMap<String, String> = HashMap::new();
 
             for i in 0..row.len()  {
                 let typ = types.index(i);

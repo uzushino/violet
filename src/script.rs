@@ -17,7 +17,6 @@ impl Isolate {
         }
     }
 
-
     pub fn eval<A: Into<String>>(&self, script: A) -> Result<String, ()> {
         let realm = Realm::create();
         let global = &realm.global_obj;

@@ -15,12 +15,13 @@ const db = Mysql.connection(
 );
 
 const row = Mysql.query(
+    ["id", "name"], 
     ["int", "string"], 
     "SELECT id, name from users"
 );
 
 Violet.table([
-    {"aaa": 1}
+  {"aaa": 1}
 ])
 
 ```

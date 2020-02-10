@@ -62,16 +62,18 @@ pub fn _query(_this: &Value, args: &[Value], _: &mut Interpreter) -> anyhow::Res
 
     let ref mut conn = GLOBAL.lock().unwrap();
     let conn = &mut conn.as_ref().unwrap();
-    let mut h: Vec<String> = Vec::new();
+    let mut h: Vec<HashMap<String, String>> = Vec::new();
 
     let fut = sqlx::query(sql.as_str())
         .fetch(conn)
         .for_each(|row| {
             let row = row.unwrap();
-            let m: HashMap<String, String> = HashMap::new();
+            let mut m: HashMap<String, String> = HashMap::new();
 
             for i in 0..row.len()  {
+                let nam = names.index(i);
                 let typ = types.index(i);
+
                 let v = match typ.as_str() {
                     "int" => i.try_get(&row).map(|i: i32| i.to_string()),
                     "string" => i.try_get(&row).map(|v: String| v.to_string()),
@@ -83,9 +85,11 @@ pub fn _query(_this: &Value, args: &[Value], _: &mut Interpreter) -> anyhow::Res
                     }),
                     _ => Ok(String::default())
                 };
-
-                h.push(v.unwrap_or_default());
+                
+                m.insert(nam.clone(), v.unwrap());
             }
+
+            h.push(m);
 
             future::ready(())
         });

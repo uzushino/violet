@@ -9,10 +9,10 @@ use sqlx::{
     pool::Pool,
     mysql::{ MySqlConnection }
 };
-
 use boa::{
     builtins::{
         function::NativeFunctionData,
+        object::Object,
         value::{from_value, to_value, ResultValue, Value, ValueData},
     },
     exec::Interpreter,
@@ -62,7 +62,7 @@ pub fn _query(_this: &Value, args: &[Value], _: &mut Interpreter) -> anyhow::Res
 
     let ref mut conn = GLOBAL.lock().unwrap();
     let conn = &mut conn.as_ref().unwrap();
-    let mut h: Vec<HashMap<String, Value>> = Vec::new();
+    let mut h: Vec<Object> = Vec::new();
 
     let fut = sqlx::query(sql.as_str())
         .fetch(conn)
@@ -89,7 +89,9 @@ pub fn _query(_this: &Value, args: &[Value], _: &mut Interpreter) -> anyhow::Res
                 m.insert(nam.clone(), to_value(v.unwrap()));
             }
 
-            h.push(m);
+            let object = Object::default();
+            h.push(object);
+            
 
             future::ready(())
         });

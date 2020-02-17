@@ -54,21 +54,7 @@ pub fn value_to_vector(value: &ValueData) -> anyhow::Result<Vec<String>> {
             if let ValueData::Integer(length) = *value.get_field_slice("length").deref().borrow() {
                 let values = (0..length)
                     .map(|idx| value.get_field_slice(&idx.to_string()))
-                    .map(|data| {
-                        match data.deref().borrow() {
-                            ValueData::String(s) => s.to_string(),
-                            ValueData::Number(n) => n.to_string(),
-                            ValueData::Null => "<NULL>".to_string(),
-                            ValueData::Boolean(b) => {
-                                if *b {
-                                    "TRUE".to_string()
-                                } else {
-                                    "FALSE".to_string()
-                                }
-                            },
-                            _ => String::default(),
-                        }
-                    })
+                    .map(|data| value_to_string(data.deref()).unwrap())
                     .collect::<Vec<String>>();
                 return Ok(values);
             }

@@ -103,8 +103,10 @@ pub fn _query(_this: &Value, args: &[Value], _: &mut Interpreter) -> anyhow::Res
 
 
 pub fn query(_this: &Value, args: &[Value], interpreter: &mut Interpreter) -> ResultValue {
-    _query(_this, args, interpreter).unwrap();
-    Ok(gc::Gc::new(ValueData::Null))
+    match _query(_this, args, interpreter) {
+        Ok(value) => Ok(value),
+        _ => Ok(gc::Gc::new(ValueData::Null))
+    }
 }
 
 pub fn create_constructor(global: &Value) -> Value {

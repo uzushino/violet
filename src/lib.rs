@@ -8,12 +8,12 @@ use std::thread::{self, JoinHandle};
 use std::time;
 use termion::raw::{IntoRawMode, RawTerminal};
 
+mod builtin;
 mod cursor;
 mod event;
 pub mod input;
 pub mod markdown;
 mod script;
-mod builtin;
 
 use event::Event;
 use input::Input;
@@ -101,49 +101,47 @@ impl App {
         let mut latest = String::default();
         let auto_save = self.auto_save;
 
-        thread::spawn(move || {
-            loop {
-                let result = rx.recv().map(|evt| {
-                    let mut f = prompt.lock().unwrap();
-                    if Event::Quit == evt {
-                        false
-                    } else {
-                        match evt {
-                            Event::Up => {
-                                write!(f.stdout, "{}", termion::scroll::Up(1));
-                            }
-                            Event::Down => {
-                                write!(f.stdout, "{}", termion::scroll::Down(1));
-                            }
-                            Event::Save => {
-                                let now = Utc::now().format("%Y-%m-%dT%H:%M:%SZ");
-                                let _ = f.save_as(format!("{}_{}.md", now, file).as_str());
-                            }
-                            Event::Reload => {
-                                f.to_tty()
-                                    .and_then(|markdown| {
-                                        write!(f.stdout, "{}", markdown)?;
-                                        
-                                        if auto_save {
-                                            if latest != markdown {
-                                                let _ = tx.send(Event::Save);
-                                                latest = markdown;
-                                            }
-                                        }
+        thread::spawn(move || loop {
+            let result = rx.recv().map(|evt| {
+                let mut f = prompt.lock().unwrap();
+                if Event::Quit == evt {
+                    false
+                } else {
+                    match evt {
+                        Event::Up => {
+                            write!(f.stdout, "{}", termion::scroll::Up(1));
+                        }
+                        Event::Down => {
+                            write!(f.stdout, "{}", termion::scroll::Down(1));
+                        }
+                        Event::Save => {
+                            let now = Utc::now().format("%Y-%m-%dT%H:%M:%SZ");
+                            let _ = f.save_as(format!("{}_{}.md", now, file).as_str());
+                        }
+                        Event::Reload => {
+                            f.to_tty()
+                                .and_then(|markdown| {
+                                    write!(f.stdout, "{}", markdown)?;
 
-                                        f.flush()
-                                    })
-                                    .unwrap();
-                            }
-                            _ => (),
-                        };
-                        true
-                    }
-                });
-                
-                if let Ok(false) = result {
-                    break;
+                                    if auto_save {
+                                        if latest != markdown {
+                                            let _ = tx.send(Event::Save);
+                                            latest = markdown;
+                                        }
+                                    }
+
+                                    f.flush()
+                                })
+                                .unwrap();
+                        }
+                        _ => (),
+                    };
+                    true
                 }
+            });
+
+            if let Ok(false) = result {
+                break;
             }
         })
     }

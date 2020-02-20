@@ -29,7 +29,7 @@ fn main() -> Result<(), failure::Error> {
     let file = value_t!(matches, "FILE", String).unwrap();
     let auto_save = value_t!(matches, "AUTO_SAVE", bool).unwrap_or(false);
     let input = std::fs::read_to_string(file.clone()).unwrap();
-    
+
     run(file, input.as_str(), auto_save, interval)?;
 
     Ok(())

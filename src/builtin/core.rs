@@ -1,17 +1,13 @@
-use std::{
-    borrow::Borrow,
-    io::Read,
-    ops::Deref,
-};
-use linked_hash_map::LinkedHashMap as HashMap;
 use boa::{
     builtins::{
         function::NativeFunctionData,
-        value::{to_value, ResultValue, Value, ValueData},
         object::Object,
+        value::{to_value, ResultValue, Value, ValueData},
     },
     exec::Interpreter,
 };
+use linked_hash_map::LinkedHashMap as HashMap;
+use std::{borrow::Borrow, io::Read, ops::Deref};
 
 use crate::make_builtin_fn;
 
@@ -20,7 +16,7 @@ pub fn stdin(_this: &Value, _args: &[Value], _: &mut Interpreter) -> ResultValue
 
     match std::io::stdin().read_to_string(&mut buf) {
         Ok(_) => Ok(to_value(buf)),
-        _ => Ok(gc::Gc::new(ValueData::Null))
+        _ => Ok(gc::Gc::new(ValueData::Null)),
     }
 }
 
@@ -41,7 +37,7 @@ fn value_to_map(obj: &gc::GcCell<Object>) -> HashMap<String, String> {
                     } else {
                         "FALSE".to_string()
                     }
-                },
+                }
                 _ => String::default(),
             };
             new_obj.insert(k.clone(), s);
@@ -52,28 +48,28 @@ fn value_to_map(obj: &gc::GcCell<Object>) -> HashMap<String, String> {
 }
 
 pub fn table(_this: &Value, args: &[Value], _: &mut Interpreter) -> ResultValue {
-    let args = args.get(0).ok_or(ValueData::Null)
-        .map_err(|_| anyhow::Error::msg("Could not get 1st argument.")).unwrap();
+    let args = args
+        .get(0)
+        .ok_or(ValueData::Null)
+        .map_err(|_| anyhow::Error::msg("Could not get 1st argument."))
+        .unwrap();
 
     let mut table = String::default();
 
     if let ValueData::Integer(length) = *args.get_field_slice("length").deref().borrow() {
         let arr = (0..length)
             .map(|idx| args.get_field_slice(&idx.to_string()))
-            .map(|row| {
-                match row.deref().borrow() {
-                    &ValueData::Object(ref obj) => {
-                        value_to_map(obj)
-                    },
-                    _ => HashMap::default()
-                }
-            }).collect::<Vec<_>>();
-        
+            .map(|row| match row.deref().borrow() {
+                &ValueData::Object(ref obj) => value_to_map(obj),
+                _ => HashMap::default(),
+            })
+            .collect::<Vec<_>>();
+
         let opt = madato::types::RenderOptions {
             headings: None,
             ..Default::default()
         };
-        
+
         table = madato::mk_table(arr.as_slice(), &Some(opt));
     }
 
@@ -85,6 +81,6 @@ pub fn create_constructor(global: &Value) -> Value {
 
     make_builtin_fn!(table, named "table", with length 1, of module);
     make_builtin_fn!(stdin, named "stdin", of module);
- 
-   module 
+
+    module
 }

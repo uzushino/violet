@@ -82,7 +82,7 @@ impl<T: Write + Send> Markdown<T> {
 
     pub fn evaluate(&self) -> Result<String, failure::Error> {
         let isolate = Isolate::new();
-        
+
         self.parse(move |script| {
             /*
             {
@@ -159,13 +159,16 @@ mod tests {
 
     #[test]
     fn evaluate() {
-        let markdown = Markdown::new(std::io::stdout(), "
+        let markdown = Markdown::new(
+            std::io::stdout(),
+            "
 # test
 ```violet
 println('aaa')
-```");
+```",
+        );
         let actual = markdown.evaluate().unwrap();
-        
+
         assert_eq!("# test\n\naaa", actual.trim_end());
     }
 

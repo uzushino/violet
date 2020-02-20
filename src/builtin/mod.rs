@@ -1,12 +1,7 @@
-use std::ops::Deref;
 use std::borrow::Borrow;
+use std::ops::Deref;
 
-use boa::{
-    builtins::{
-        object::ObjectKind,
-        value::ValueData,
-    }
-};
+use boa::builtins::{object::ObjectKind, value::ValueData};
 
 pub mod core;
 
@@ -37,7 +32,7 @@ pub fn value_to_string(data: &ValueData) -> anyhow::Result<String> {
             } else {
                 "FALSE".to_string()
             }
-        },
+        }
         _ => String::default(),
     };
 
@@ -47,7 +42,7 @@ pub fn value_to_string(data: &ValueData) -> anyhow::Result<String> {
 pub fn value_to_vector(value: &ValueData) -> anyhow::Result<Vec<String>> {
     match value.deref().borrow() {
         &ValueData::Object(ref x) => {
-            if  x.deref().borrow().kind != ObjectKind::Array {
+            if x.deref().borrow().kind != ObjectKind::Array {
                 return Ok(Vec::default());
             }
 
@@ -60,7 +55,7 @@ pub fn value_to_vector(value: &ValueData) -> anyhow::Result<Vec<String>> {
             }
 
             Ok(Vec::default())
-        },
+        }
         _ => Ok(Vec::default()),
     }
 }

@@ -3,12 +3,13 @@ use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::ops::{Deref, Index};
 use std::sync::{Arc, Mutex};
+use serde_json::{ json, Value as JSONValue };
 
 use boa::{
     builtins::{
         function::NativeFunctionData,
         object::Object,
-        value::{from_value, to_value, ResultValue, Value, ValueData},
+        value::{from_value, to_value, ResultValue, Value, ValueData, from_json },
     },
     exec::Interpreter,
 };
@@ -92,6 +93,8 @@ pub fn _query(_this: &Value, args: &[Value], _: &mut Interpreter) -> anyhow::Res
 
             m.insert(nam.clone(), to_value(v.unwrap()));
         }
+        let v = json!({ "an": "object" });
+        let value: Value = from(v).unwrap();
 
         let object = Object::default();
         h.push(object);

@@ -9,8 +9,9 @@ use boa::{
     builtins::{
         function::NativeFunctionData,
         object::Object,
-        value::{from_value, to_value, ResultValue, Value, ValueData, from_json },
+        value::{from_value, to_value, ResultValue, Value, ValueData },
     },
+    property::Property,
     exec::Interpreter,
 };
 use sqlx::{
@@ -25,6 +26,16 @@ use crate::{builtin::value_to_vector, make_builtin_fn};
 
 lazy_static! {
     static ref GLOBAL: Arc<Mutex<Option<Pool<MySqlConnection>>>> = Arc::new(Mutex::new(None));
+}
+
+pub fn hashmap_to_vector(this: &Value, args: HashMap<String, Object>) {
+    let length = Property::new()
+        .value(to_value(args.len() as i32))
+        .writable(true)
+        .configurable(false)
+        .enumerable(false);
+    
+    this.set_prop("length".to_string(), length);
 }
 
 pub fn connection(_this: &Value, args: &[Value], _: &mut Interpreter) -> ResultValue {
@@ -93,8 +104,6 @@ pub fn _query(_this: &Value, args: &[Value], _: &mut Interpreter) -> anyhow::Res
 
             m.insert(nam.clone(), to_value(v.unwrap()));
         }
-        let v = json!({ "an": "object" });
-        let value: Value = from(v).unwrap();
 
         let object = Object::default();
         h.push(object);

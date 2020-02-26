@@ -10,8 +10,8 @@ use boa::{
         function::NativeFunctionData,
         object::Object,
         value::{from_value, to_value, ResultValue, Value, ValueData },
+        property::Property,
     },
-    property::Property,
     exec::Interpreter,
 };
 use sqlx::{
@@ -36,6 +36,10 @@ pub fn hashmap_to_vector(this: &Value, args: HashMap<String, Object>) {
         .enumerable(false);
     
     this.set_prop("length".to_string(), length);
+
+    for (k, v) in args.iter() {
+        this.set_prop(k.to_string(), Property::default());
+    }
 }
 
 pub fn connection(_this: &Value, args: &[Value], _: &mut Interpreter) -> ResultValue {

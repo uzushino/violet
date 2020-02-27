@@ -3,13 +3,17 @@ use boa::{
         function::NativeFunctionData,
         object::Object,
         value::{to_value, ResultValue, Value, ValueData},
+        property::Property,
     },
     exec::Interpreter,
 };
 use linked_hash_map::LinkedHashMap as HashMap;
 use std::{borrow::Borrow, io::Read, ops::Deref};
-
-use crate::make_builtin_fn;
+use crate::{
+    builtin::value_to_vector, 
+    builtin::hashmap_to_vector,
+    make_builtin_fn
+};
 
 pub fn stdin(_this: &Value, _args: &[Value], _: &mut Interpreter) -> ResultValue {
     let mut buf = String::default();

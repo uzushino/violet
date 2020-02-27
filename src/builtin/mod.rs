@@ -1,7 +1,13 @@
 use std::borrow::Borrow;
 use std::ops::Deref;
 
-use boa::builtins::{object::ObjectKind, value::ValueData};
+use boa::builtins::{
+    object::ObjectKind, value::ValueData,
+    property::Property,
+    object::Object,
+    value::{from_value, to_value, ResultValue, Value }
+};
+use std::collections::HashMap;
 
 pub mod core;
 
@@ -58,4 +64,23 @@ pub fn value_to_vector(value: &ValueData) -> anyhow::Result<Vec<String>> {
         }
         _ => Ok(Vec::default()),
     }
+}
+
+pub fn hashmap_to_vector(this: &Value, args: HashMap<String, ValueData>) -> Value {
+    let obj = Object::default();
+    let object = ValueData::Object(gc::GcCell::new(obj));
+
+    let length = Property::new()
+        .value(to_value(args.len() as i32))
+        .writable(true)
+        .configurable(false)
+        .enumerable(false);
+    
+    this.set_prop("length".to_string(), length);
+
+    for (k, v) in args.iter() {
+        object.set_field_slice(k, gc::Gc::new(v.clone()));
+    }
+
+    gc::Gc::new(object)
 }

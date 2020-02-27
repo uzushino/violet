@@ -3,7 +3,6 @@ use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::ops::{Deref, Index};
 use std::sync::{Arc, Mutex};
-use serde_json::{ json, Value as JSONValue };
 
 use boa::{
     builtins::{
@@ -28,19 +27,6 @@ lazy_static! {
     static ref GLOBAL: Arc<Mutex<Option<Pool<MySqlConnection>>>> = Arc::new(Mutex::new(None));
 }
 
-pub fn hashmap_to_vector(this: &Value, args: HashMap<String, Object>) {
-    let length = Property::new()
-        .value(to_value(args.len() as i32))
-        .writable(true)
-        .configurable(false)
-        .enumerable(false);
-    
-    this.set_prop("length".to_string(), length);
-
-    for (k, v) in args.iter() {
-        this.set_prop(k.to_string(), Property::default());
-    }
-}
 
 pub fn connection(_this: &Value, args: &[Value], _: &mut Interpreter) -> ResultValue {
     let database =

@@ -31,22 +31,15 @@ pub fn make_options() -> Options {
     opts
 }
 
-pub struct Markdown<T: Write> {
-    pub stdout: T,
+pub struct Markdown {
     pub input: String,
 }
 
-impl<T: Write + Send> Markdown<T> {
-    pub fn new(stdout: T, input: impl ToString) -> Markdown<T> {
+impl Markdown {
+    pub fn new(input: impl ToString) -> Markdown {
         Markdown {
-            stdout,
             input: input.to_string(),
         }
-    }
-
-    pub fn flush(&mut self) -> Result<(), failure::Error> {
-        self.stdout.flush()?;
-        Ok(())
     }
 
     pub fn parse<A>(&self, cb: A) -> Result<String, failure::Error>
@@ -84,13 +77,6 @@ impl<T: Write + Send> Markdown<T> {
         let isolate = Isolate::new();
 
         self.parse(move |script| {
-            /*
-            {
-                let mut buf = isolate.buf.lock().unwrap();
-                *buf = String::default();
-            }
-            */
-
             isolate.eval(script).unwrap_or_default()
         })
     }
@@ -109,9 +95,6 @@ impl<T: Write + Send> Markdown<T> {
         let syntax_set = SyntaxSet::load_defaults_nonewlines();
         let text = self.evaluate()?;
         let parser = pulldown_cmark::Parser::new_ext(text.as_str(), make_options());
-
-        write!(self.stdout, "{}", termion::cursor::Goto(1, 1))?;
-        write!(self.stdout, "{}", termion::clear::All)?;
 
         let cd = std::env::current_dir()?;
         let mut s: Vec<u8> = Vec::default();
@@ -151,32 +134,5 @@ impl<T: Write + Send> Markdown<T> {
         let s = comrak::markdown_to_html(markdown.as_str(), &opts);
 
         Ok(s)
-    }
-}
-
-mod tests {
-    use super::Markdown;
-
-    #[test]
-    fn evaluate() {
-        let markdown = Markdown::new(
-            std::io::stdout(),
-            "
-# test
-```violet
-println('aaa')
-```",
-        );
-        let actual = markdown.evaluate().unwrap();
-
-        assert_eq!("# test\n\naaa", actual.trim_end());
-    }
-
-    #[test]
-    fn to_html() {
-        let markdown = Markdown::new(std::io::stdout(), "# test");
-        let actual = markdown.to_html().unwrap();
-
-        assert_eq!("<h1>test</h1>", actual.trim_end());
     }
 }

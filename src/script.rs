@@ -25,8 +25,6 @@ impl Isolate {
         let engine = &mut Executor::new(realm);
         let a = boa::forward_val(engine, script.into().as_str());
 
-        dbg!(&a);
-
         Ok(a.unwrap().to_string())
     }
 }

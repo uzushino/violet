@@ -10,8 +10,6 @@ use boa::{
 use linked_hash_map::LinkedHashMap as HashMap;
 use std::{borrow::Borrow, io::Read, ops::Deref};
 use crate::{
-    builtin::value_to_vector, 
-    builtin::hashmap_to_vector,
     make_builtin_fn
 };
 

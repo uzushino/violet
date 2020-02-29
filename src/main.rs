@@ -20,14 +20,14 @@ fn main() -> Result<(), failure::Error> {
 
     let file = value_t!(matches, "FILE", String).unwrap();
     let input = std::fs::read_to_string(file.clone()).unwrap();
-    let markdown = run(file, input.as_str())?;
+    let markdown = run(input.as_str())?;
 
     println!("{}", markdown);
 
     Ok(())
 }
 
-fn run(file: String, input: &str) -> Result<String, failure::Error> {
-    let app = violet::App::new(file, input.to_string());
+fn run(input: &str) -> Result<String, failure::Error> {
+    let app = violet::App::new(input.to_string());
     app.run()
 }

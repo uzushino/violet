@@ -14,14 +14,17 @@ const db = Mysql.connection(
     "mysql://root:password@127.0.0.1/violet"
 );
 
+/*
 const row = Mysql.query(
     ["id", "name"], 
     ["int", "string"], 
     "SELECT id, name from users"
 );
+*/
 
 Violet.table([
-  {"aaa": 1}
+  {"a": 1},
+  {"b": 1}
 ])
 
 ```

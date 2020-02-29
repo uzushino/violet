@@ -28,7 +28,7 @@ pub enum Action {
 pub struct AppState;
 
 impl App {
-    pub fn new(file: String, input: String) -> Self {
+    pub fn new(input: String) -> Self {
         let prompt = Markdown::new(input);
 
         App {

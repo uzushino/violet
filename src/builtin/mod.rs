@@ -5,7 +5,7 @@ use boa::builtins::{
     object::ObjectKind, value::ValueData,
     property::Property,
     object::Object,
-    value::{from_value, to_value, ResultValue, Value }
+    value::{to_value, Value}
 };
 use std::collections::HashMap;
 
@@ -66,7 +66,25 @@ pub fn value_to_vector(value: &ValueData) -> anyhow::Result<Vec<String>> {
     }
 }
 
-pub fn hashmap_to_vector(this: &Value, args: HashMap<String, ValueData>) -> Value {
+pub fn vector_to_value(this: &Value, args: Vec<Value>) -> Value {
+    let length = Property::new()
+        .value(to_value(args.len() as i32))
+        .writable(true)
+        .configurable(false)
+        .enumerable(false);
+
+    this.set_prop("length".to_string(), length);
+
+    this.set_kind(ObjectKind::Array);
+
+    for (n, value) in args.iter().enumerate() {
+        this.set_field_slice(&n.to_string(), value.clone());
+    }
+
+    this.clone()
+}
+
+pub fn hashmap_to_value(this: &Value, args: HashMap<String, ValueData>) -> Value {
     let obj = Object::default();
     let object = ValueData::Object(gc::GcCell::new(obj));
 

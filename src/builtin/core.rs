@@ -9,6 +9,7 @@ use boa::{
 use linked_hash_map::LinkedHashMap as HashMap;
 use std::{borrow::Borrow, io::Read, ops::Deref};
 use crate::{
+    builtin::value_to_string,
     make_builtin_fn
 };
 
@@ -28,20 +29,8 @@ fn value_to_map(obj: &gc::GcCell<Object>) -> HashMap<String, String> {
         let value = property.value.as_ref();
 
         if let Some(v) = value {
-            let s = match v.deref().borrow() {
-                ValueData::String(s) => s.to_string(),
-                ValueData::Number(n) => n.to_string(),
-                ValueData::Null => "<NULL>".to_string(),
-                ValueData::Boolean(b) => {
-                    if *b {
-                        "TRUE".to_string()
-                    } else {
-                        "FALSE".to_string()
-                    }
-                }
-                _ => String::default(),
-            };
-            new_obj.insert(k.clone(), s);
+            let s = value_to_string(v.deref().borrow());
+            new_obj.insert(k.clone(), s.unwrap());
         }
     }
 

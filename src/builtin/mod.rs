@@ -57,6 +57,7 @@ pub fn value_to_vector(value: &ValueData) -> anyhow::Result<Vec<String>> {
                     .map(|idx| value.get_field_slice(&idx.to_string()))
                     .map(|data| value_to_string(data.deref()).unwrap())
                     .collect::<Vec<String>>();
+
                 return Ok(values);
             }
 

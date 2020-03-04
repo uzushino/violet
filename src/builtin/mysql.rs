@@ -21,7 +21,13 @@ use sqlx::{
 
 use lazy_static::lazy_static;
 
-use crate::{builtin::value_to_vector, make_builtin_fn};
+use crate::{
+    builtin::{ 
+        value_to_vector,
+        hashmap_to_value,
+    }, 
+    make_builtin_fn
+};
 
 lazy_static! {
     static ref GLOBAL: Arc<Mutex<Option<Pool<MySqlConnection>>>> = Arc::new(Mutex::new(None));
@@ -70,11 +76,11 @@ pub fn _query(_this: &Value, args: &[Value], _: &mut Interpreter) -> anyhow::Res
 
     let ref mut conn = GLOBAL.lock().unwrap();
     let conn = &mut conn.as_ref().unwrap();
-    let mut h: Vec<Object> = Vec::new();
+    let mut h: Vec<Value> = Vec::new();
 
     let fut = sqlx::query(sql.as_str()).fetch(conn).for_each(|row| {
         let row = row.unwrap();
-        let mut m: HashMap<String, Value> = HashMap::new();
+        let mut m: HashMap<String, ValueData> = HashMap::new();
 
         for i in 0..row.len() {
             let nam = names.index(i);
@@ -92,10 +98,12 @@ pub fn _query(_this: &Value, args: &[Value], _: &mut Interpreter) -> anyhow::Res
                 _ => Ok(String::default()),
             };
 
-            m.insert(nam.clone(), to_value(v.unwrap()));
+            m.insert(nam.clone(), ValueData::String(v.unwrap()));
         }
 
-        let object = Object::default();
+        let this = ValueData::Object(gc::GcCell::new(Object::default()));
+        let object = hashmap_to_value(&gc::Gc::new(this), m);
+
         h.push(object);
 
         future::ready(())

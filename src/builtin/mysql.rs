@@ -23,6 +23,7 @@ use lazy_static::lazy_static;
 
 use crate::{
     builtin::{ 
+        vector_to_value,
         value_to_vector,
         hashmap_to_value,
     }, 
@@ -110,8 +111,11 @@ pub fn _query(_this: &Value, args: &[Value], _: &mut Interpreter) -> anyhow::Res
     });
 
     executor::block_on(fut);
+    
+    let this = ValueData::Object(gc::GcCell::new(Object::default()));
+    let result = vector_to_value(&gc::Gc::new(this), h.clone());
 
-    Ok(gc::Gc::new(ValueData::Null))
+    Ok(result)
 }
 
 pub fn query(_this: &Value, args: &[Value], interpreter: &mut Interpreter) -> ResultValue {

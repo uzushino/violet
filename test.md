@@ -14,18 +14,13 @@ const db = Mysql.connection(
     "mysql://root:password@127.0.0.1/violet"
 );
 
-/*
 const row = Mysql.query(
     ["id", "name"], 
     ["int", "string"], 
-    "SELECT id, name from users"
+    "SELECT id, name FROM users"
 );
-*/
 
-Violet.table([
-  {"a": 1},
-  {"b": 1}
-])
+Violet.table(row)
 
 ```
 - [ ] aaaa

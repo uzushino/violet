@@ -69,7 +69,8 @@ impl Markdown {
         let mut md = vec![];
         comrak::format_commonmark(root, &ComrakOptions::default(), &mut md)?;
 
-        let text = String::from_utf8(md)?.replace("&#10;", "\n");
+        let text = String::from_utf8(md)?;
+
         Ok(text)
     }
 
@@ -98,6 +99,7 @@ impl Markdown {
 
         let cd = std::env::current_dir()?;
         let mut s: Vec<u8> = Vec::default();
+
         match mdcat::TerminalSize::detect() {
             Some(size) => {
                 mdcat::push_tty(
@@ -116,7 +118,7 @@ impl Markdown {
                     .split('\n')
                     .map(ToString::to_string)
                     .collect::<Vec<String>>()
-                    .join("\n\r");
+                    .join("\n");
 
                 Ok(tty)
             }
@@ -131,6 +133,7 @@ impl Markdown {
             ext_tasklist: true,
             ..Default::default()
         };
+        
         let s = comrak::markdown_to_html(markdown.as_str(), &opts);
 
         Ok(s)

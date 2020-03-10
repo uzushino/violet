@@ -11,7 +11,6 @@ pub struct Isolate {
 impl Isolate {
     pub fn new() -> Self {
         let buf = Arc::new(Mutex::new(String::default()));
-
         Self { buf }
     }
 

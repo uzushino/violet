@@ -60,7 +60,6 @@ pub fn value_to_vector(value: &ValueData) -> anyhow::Result<Vec<String>> {
 
                 return Ok(values);
             }
-
             Ok(Vec::default())
         }
         _ => Ok(Vec::default()),
@@ -75,7 +74,6 @@ pub fn vector_to_value(this: &Value, args: Vec<Value>) -> Value {
         .enumerable(false);
 
     this.set_prop("length".to_string(), length);
-
     this.set_kind(ObjectKind::Array);
 
     for (n, value) in args.iter().enumerate() {

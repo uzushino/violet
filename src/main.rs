@@ -10,12 +10,6 @@ fn main() -> Result<(), failure::Error> {
                 .required(true)
                 .help("Sets a render markdown."),
         )
-        .arg(
-            Arg::with_name("AUTO_SAVE")
-                .long("auto_save")
-                .help("Sets the Auto save file when evaluate changed.")
-                .takes_value(true),
-        )
         .get_matches();
 
     let file = value_t!(matches, "FILE", String).unwrap();

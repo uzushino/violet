@@ -65,11 +65,11 @@ pub fn _query(_this: &Value, args: &[Value], _: &mut Interpreter) -> anyhow::Res
         .ok_or(ValueData::Null)
         .map_err(|_| anyhow::Error::msg("Could not get 1st argument."))?;
     let args1 = args
-        .get(0)
+        .get(1)
         .ok_or(ValueData::Null)
         .map_err(|_| anyhow::Error::msg("Could not get 2nd argument."))?;
     let args2 = args
-        .get(1)
+        .get(2)
         .ok_or(ValueData::Null)
         .map_err(|_| anyhow::Error::msg("Could not get 3rd argument."))?;
 

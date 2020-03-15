@@ -60,6 +60,7 @@ pub fn value_to_vector(value: &ValueData) -> anyhow::Result<Vec<String>> {
 
                 return Ok(values);
             }
+
             Ok(Vec::default())
         }
         _ => Ok(Vec::default()),

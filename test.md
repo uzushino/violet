@@ -23,5 +23,6 @@ const row = Mysql.query(
 Violet.table(row)
 
 ```
+
 - [ ] aaaa
 - [x] bbbb

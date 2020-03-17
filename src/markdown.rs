@@ -112,16 +112,7 @@ impl Markdown {
                     syntax_set,
                 )?;
 
-                // Change \n to \n\r for New line in raw_mode.
-                let t = String::from_utf8(s).unwrap_or_default();
-                /*
-                let tty = t
-                    .split('\n')
-                    .map(ToString::to_string)
-                    .collect::<Vec<String>>()
-                    .join("\n");
-                */
-                Ok(t)
+                String::from_utf8(s)
             }
             None => Ok(String::default()),
         }

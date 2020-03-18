@@ -112,7 +112,7 @@ impl Markdown {
                     syntax_set,
                 )?;
 
-                String::from_utf8(s)
+                Ok(String::from_utf8(s).unwrap_or_default())
             }
             None => Ok(String::default()),
         }

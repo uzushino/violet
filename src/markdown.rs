@@ -42,7 +42,7 @@ impl Markdown {
         }
     }
 
-    pub fn parse<A>(&self, cb: A) -> Result<String, failure::Error>
+    pub fn parse<A>(&self, cb: A) -> anyhow::Result<String>
     where
         A: Fn(String) -> String,
     {
@@ -74,7 +74,7 @@ impl Markdown {
         Ok(text)
     }
 
-    pub fn evaluate(&self) -> Result<String, failure::Error> {
+    pub fn evaluate(&self) -> anyhow::Result<String> {
         let isolate = Isolate::new();
 
         self.parse(move |script| {
@@ -82,7 +82,7 @@ impl Markdown {
         })
     }
 
-    pub fn save_as(&self, path: &str) -> Result<(), failure::Error> {
+    pub fn save_as(&self, path: &str) -> anyhow::Result<()> {
         let text = self.evaluate()?;
         let file = fs::File::create(path)?;
         let mut f = BufWriter::new(file);
@@ -92,7 +92,7 @@ impl Markdown {
         Ok(())
     }
 
-    pub fn to_tty(&mut self) -> Result<String, failure::Error> {
+    pub fn to_tty(&mut self) -> anyhow::Result<String> {
         let syntax_set = SyntaxSet::load_defaults_nonewlines();
         let text = self.evaluate()?;
         let parser = pulldown_cmark::Parser::new_ext(text.as_str(), make_options());
@@ -102,7 +102,7 @@ impl Markdown {
 
         match mdcat::TerminalSize::detect() {
             Some(size) => {
-                mdcat::push_tty(
+                let md = mdcat::push_tty(
                     &mut s,
                     mdcat::TerminalCapabilities::none(),
                     size,
@@ -110,16 +110,17 @@ impl Markdown {
                     &cd,
                     mdcat::ResourceAccess::LocalOnly,
                     syntax_set,
-                )?;
+                );
 
-                Ok(String::from_utf8(s).unwrap_or_default())
+                md.map(|s| String::from_utf8(s))
             }
             None => Ok(String::default()),
         }
     }
 
-    pub fn to_html(&self) -> Result<String, failure::Error> {
+    pub fn to_html(&self) -> anyhow::Result<String> {
         let markdown = self.evaluate()?;
+
         let opts = comrak::ComrakOptions {
             ext_table: true,
             ext_tasklist: true,

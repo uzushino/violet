@@ -26,7 +26,7 @@ impl App {
         }
     }
 
-    pub fn run(&self) -> Result<String, failure::Error> {
+    pub fn run(&self) -> anyhow::Result<String> {
         self.prompt.evaluate()
     }
 }

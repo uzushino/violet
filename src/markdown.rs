@@ -112,7 +112,8 @@ impl Markdown {
                     syntax_set,
                 );
 
-                md.map(|s| String::from_utf8(s))
+                let a = String::from_utf8(s)?;
+                Ok(a)
             }
             None => Ok(String::default()),
         }

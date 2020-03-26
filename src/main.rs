@@ -1,6 +1,6 @@
 use clap::{crate_version, value_t, Arg};
 
-fn main() -> Result<(), failure::Error> {
+fn main() -> anyhow::Result<()> {
     env_logger::init();
 
     let matches = clap::App::new("")
@@ -21,7 +21,7 @@ fn main() -> Result<(), failure::Error> {
     Ok(())
 }
 
-fn run(input: &str) -> Result<String, failure::Error> {
+fn run(input: &str) -> anyhow::Result<String> {
     let app = violet::App::new(input.to_string());
     app.run()
 }

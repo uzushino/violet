@@ -93,30 +93,8 @@ impl Markdown {
     }
 
     pub fn to_tty(&mut self) -> anyhow::Result<String> {
-        let syntax_set = SyntaxSet::load_defaults_nonewlines();
         let text = self.evaluate()?;
-        let parser = pulldown_cmark::Parser::new_ext(text.as_str(), make_options());
-
-        let cd = std::env::current_dir()?;
-        let mut s: Vec<u8> = Vec::default();
-
-        match mdcat::TerminalSize::detect() {
-            Some(size) => {
-                let md = mdcat::push_tty(
-                    &mut s,
-                    mdcat::TerminalCapabilities::none(),
-                    size,
-                    parser,
-                    &cd,
-                    mdcat::ResourceAccess::LocalOnly,
-                    syntax_set,
-                );
-
-                let a = String::from_utf8(s)?;
-                Ok(a)
-            }
-            None => Ok(String::default()),
-        }
+        Ok(text)
     }
 
     pub fn to_html(&self) -> anyhow::Result<String> {

@@ -92,11 +92,6 @@ impl Markdown {
         Ok(())
     }
 
-    pub fn to_tty(&mut self) -> anyhow::Result<String> {
-        let text = self.evaluate()?;
-        Ok(text)
-    }
-
     pub fn to_html(&self) -> anyhow::Result<String> {
         let markdown = self.evaluate()?;
 

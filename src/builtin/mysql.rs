@@ -9,7 +9,6 @@ use boa::{
         function::NativeFunctionData,
         object::Object,
         value::{from_value, to_value, ResultValue, Value, ValueData },
-        property::Property,
     },
     exec::Interpreter,
 };

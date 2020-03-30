@@ -6,7 +6,6 @@ use comrak::{
 use pulldown_cmark::Options;
 use std::fs;
 use std::io::{BufWriter, Write};
-use syntect::parsing::SyntaxSet;
 
 use crate::script::Isolate;
 

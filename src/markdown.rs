@@ -74,16 +74,16 @@ impl Markdown {
     }
 
     pub fn evaluate(&self) -> anyhow::Result<String> {
-        let isolate = Isolate::new();
+        self.parse(|script| {
+            let isolate = Isolate::new();
 
-        self.parse(move |script| {
             isolate.eval(script).unwrap_or_default()
         })
     }
 
     pub fn save_as(&self, path: &str) -> anyhow::Result<()> {
-        let text = self.evaluate()?;
         let file = fs::File::create(path)?;
+        let text = self.evaluate()?;
         let mut f = BufWriter::new(file);
 
         f.write_all(text.as_bytes())?;

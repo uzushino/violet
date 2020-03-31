@@ -14,7 +14,7 @@ impl Isolate {
         Self { buf }
     }
 
-    pub fn eval<A: Into<String>>(&self, script: A) -> Result<String, ()> {
+    pub fn eval<A: Into<String>>(&self, script: A) -> Result<String, gc::Gc<boa::builtins::value::ValueData>> {
         let realm = Realm::create();
         let global = &realm.global_obj;
 
@@ -22,8 +22,8 @@ impl Isolate {
         global.set_field_slice("Mysql", builtin::mysql::create_constructor(global));
 
         let engine = &mut Executor::new(realm);
-        let a = boa::forward_val(engine, script.into().as_str());
-
-        Ok(a.unwrap().to_string())
+        
+        boa::forward_val(engine, script.into().as_str())
+            .map(|s| s.to_string())
     }
 }

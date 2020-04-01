@@ -1,7 +1,7 @@
 use futures::executor;
 use std::borrow::Borrow;
 use std::collections::HashMap;
-use std::ops::{Deref, Index};
+use std::ops::Index;
 use std::sync::{Arc, Mutex};
 
 use boa::{
@@ -49,8 +49,8 @@ fn value_to_argument(
     types: &Value,
     sql: &Value,
 ) -> anyhow::Result<(Vec<String>, Vec<String>, String)> {
-    let names = value_to_vector(names.deref())?;
-    let types = value_to_vector(types.deref())?;
+    let names = value_to_vector(&*names)?;
+    let types = value_to_vector(&*types)?;
     let sql = from_value::<String>(sql.borrow().clone()).map_err(anyhow::Error::msg)?;
 
     Ok((names, types, sql))

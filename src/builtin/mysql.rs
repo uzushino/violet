@@ -8,10 +8,11 @@ use boa::{
     builtins::{
         function::NativeFunctionData,
         object::Object,
-        value::{from_value, to_value, ResultValue, Value, ValueData },
+        value::{from_value, to_value, ResultValue, Value, ValueData},
     },
     exec::Interpreter,
 };
+
 use sqlx::{
     mysql::MySqlConnection,
     pool::Pool,
@@ -32,7 +33,6 @@ use crate::{
 lazy_static! {
     static ref GLOBAL: Arc<Mutex<Option<Pool<MySqlConnection>>>> = Arc::new(Mutex::new(None));
 }
-
 
 pub fn connection(_this: &Value, args: &[Value], _: &mut Interpreter) -> ResultValue {
     let database =
@@ -73,7 +73,6 @@ pub fn _query(_this: &Value, args: &[Value], _: &mut Interpreter) -> anyhow::Res
         .map_err(|_| anyhow::Error::msg("Could not get 3rd argument."))?;
 
     let (names, types, sql) = value_to_argument(args0, args1, args2)?;
-
     let ref mut conn = GLOBAL.lock().unwrap();
     let conn = &mut conn.as_ref().unwrap();
     let mut h: Vec<Value> = Vec::new();

@@ -22,7 +22,7 @@ where
 pub fn make_options() -> Options {
     let mut opts = Options::empty();
 
-    // opts.insert(Options::ENABLE_TABLES);
+    opts.insert(Options::ENABLE_TABLES);
     opts.insert(Options::ENABLE_FOOTNOTES);
     opts.insert(Options::ENABLE_STRIKETHROUGH);
     opts.insert(Options::ENABLE_TASKLISTS);

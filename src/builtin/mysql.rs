@@ -126,7 +126,7 @@ pub fn query(_this: &Value, args: &[Value], interpreter: &mut Interpreter) -> Re
 pub fn create_constructor(global: &Value) -> Value {
     let module = ValueData::new_obj(Some(global));
 
-    //make_builtin_fn!(table, named "table", with length 1, of module);
+    make_builtin_fn!(table, named "table", with length 1, of module);
     make_builtin_fn!(connection, named "connection", of module);
     make_builtin_fn!(query, named "query", with length 2, of module);
 

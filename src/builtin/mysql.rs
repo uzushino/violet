@@ -117,18 +117,20 @@ pub fn _query(_this: &Value, args: &[Value], _: &mut Interpreter) -> anyhow::Res
 }
 
 pub fn query(_this: &Value, args: &[Value], interpreter: &mut Interpreter) -> ResultValue {
-    match _query(_this, args, interpreter) {
-        Ok(value) => Ok(value),
-        _ => Ok(gc::Gc::new(ValueData::Null)),
+    let result = query(_this, args, interpreter);
+    if result.is_err() {
+        return Ok(gc::Gc::new(ValueData::Null))
     }
+
+    result
 }
 
 pub fn create_constructor(global: &Value) -> Value {
     let module = ValueData::new_obj(Some(global));
 
-    //make_builtin_fn!(table, named "table", with length 1, of module);
     make_builtin_fn!(connection, named "connection", of module);
     make_builtin_fn!(query, named "query", with length 2, of module);
+    // make_builtin_fn!(execute, named "exec", with length 1, of module);
 
     module
 }

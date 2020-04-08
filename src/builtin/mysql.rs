@@ -116,8 +116,38 @@ pub fn _query(_this: &Value, args: &[Value], _: &mut Interpreter) -> anyhow::Res
     Ok(result)
 }
 
+pub fn _exec(_this: &Value, args: &[Value], _: &mut Interpreter) -> anyhow::Result<Value> {
+    let args0 = args
+        .get(0)
+        .ok_or(ValueData::Null)
+        .map_err(|_| anyhow::Error::msg("Could not get 1st argument."))?;
+   
+    let sql = from_value::<String>(args0.borrow().clone()).map_err(anyhow::Error::msg)?;
+    let ref mut conn = GLOBAL.lock().unwrap();
+    let conn = &mut conn.as_ref().unwrap();
+
+    let fut = sqlx::query(sql.as_str()).fetch(conn).for_each(|_row| {
+        future::ready(())
+    });
+
+    executor::block_on(fut);
+    
+    Ok(gc::Gc::new(ValueData::Null))
+}
+
 pub fn query(_this: &Value, args: &[Value], interpreter: &mut Interpreter) -> ResultValue {
-    let result = query(_this, args, interpreter);
+    let result = _query(_this, args, interpreter);
+
+    if result.is_err() {
+        return Ok(gc::Gc::new(ValueData::Null))
+    }
+
+    result
+}
+
+pub fn exec(_this: &Value, args: &[Value], interpreter: &mut Interpreter) -> ResultValue {
+    let result = _query(_this, args, interpreter);
+
     if result.is_err() {
         return Ok(gc::Gc::new(ValueData::Null))
     }
@@ -130,7 +160,7 @@ pub fn create_constructor(global: &Value) -> Value {
 
     make_builtin_fn!(connection, named "connection", of module);
     make_builtin_fn!(query, named "query", with length 2, of module);
-    // make_builtin_fn!(execute, named "exec", with length 1, of module);
+    make_builtin_fn!(execute, named "exec", with length 1, of module);
 
     module
 }

@@ -142,7 +142,7 @@ pub fn query(_this: &Value, args: &[Value], interpreter: &mut Interpreter) -> Re
         return Ok(gc::Gc::new(ValueData::Null))
     }
 
-    result
+    Ok(result.unwrap())
 }
 
 pub fn exec(_this: &Value, args: &[Value], interpreter: &mut Interpreter) -> ResultValue {
@@ -152,7 +152,7 @@ pub fn exec(_this: &Value, args: &[Value], interpreter: &mut Interpreter) -> Res
         return Ok(gc::Gc::new(ValueData::Null))
     }
 
-    result
+    Ok(result.unwrap())
 }
 
 pub fn create_constructor(global: &Value) -> Value {

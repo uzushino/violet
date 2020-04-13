@@ -146,8 +146,7 @@ pub fn query(_this: &Value, args: &[Value], interpreter: &mut Interpreter) -> Re
 }
 
 pub fn exec(_this: &Value, args: &[Value], interpreter: &mut Interpreter) -> ResultValue {
-    let result = _query(_this, args, interpreter);
-
+    let result = _exec(_this, args, interpreter);
     if result.is_err() {
         return Ok(gc::Gc::new(ValueData::Null))
     }
@@ -160,7 +159,7 @@ pub fn create_constructor(global: &Value) -> Value {
 
     make_builtin_fn!(connection, named "connection", of module);
     make_builtin_fn!(query, named "query", with length 2, of module);
-    make_builtin_fn!(execute, named "exec", with length 1, of module);
+    make_builtin_fn!(exec, named "exec", with length 1, of module);
 
     module
 }

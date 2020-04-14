@@ -1,16 +1,14 @@
-use std::sync::*;
-
 use crate::builtin;
 use boa::exec::Executor;
 use boa::realm::Realm;
 
 pub struct Isolate {
-    pub buf: Arc<Mutex<String>>,
+    pub buf: String,
 }
 
 impl Isolate {
     pub fn new() -> Self {
-        let buf = Arc::new(Mutex::new(String::default()));
+        let buf = String::default();
         Self { buf }
     }
 

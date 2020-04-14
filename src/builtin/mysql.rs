@@ -147,6 +147,7 @@ pub fn query(_this: &Value, args: &[Value], interpreter: &mut Interpreter) -> Re
 
 pub fn exec(_this: &Value, args: &[Value], interpreter: &mut Interpreter) -> ResultValue {
     let result = _exec(_this, args, interpreter);
+    
     if result.is_err() {
         return Ok(gc::Gc::new(ValueData::Null))
     }

@@ -21,7 +21,7 @@ futures = "*"
 linked-hash-map = "*"
 chrono = "*"
 reqwest = "*"
-Boa = "0.5.1"
+Boa = "0.7.0"
 gc = "*"
 rand = "0.7.2"
 sqlx = { version = "0.2.4", features = [ "mysql" ] }

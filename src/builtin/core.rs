@@ -1,16 +1,13 @@
 use boa::{
+    Context, 
+    object::{GcObject, ObjectData},
     builtins::{
-        function::NativeFunctionData,
-        object::Object,
-        value::{to_value, ResultValue, Value, ValueData},
-    },
-    exec::Interpreter,
-};
+        function::{ NativeFunction, make_builtin_fn},
+   }, exec::Interpreter, };
 use linked_hash_map::LinkedHashMap as HashMap;
 use std::{borrow::Borrow, io::Read, ops::Deref};
 use crate::{
     builtin::value_to_string,
-    make_builtin_fn
 };
 
 pub fn stdin(_this: &Value, _args: &[Value], _: &mut Interpreter) -> ResultValue {
@@ -66,11 +63,11 @@ pub fn table(_this: &Value, args: &[Value], _: &mut Interpreter) -> ResultValue 
     Ok(gc::Gc::new(ValueData::String(table)))
 }
 
-pub fn create_constructor(global: &Value) -> Value {
-    let module = ValueData::new_obj(Some(global));
+pub fn create_constructor(context: &Context) -> GcObject {
+    let mut core = context.construct_object();
 
-    make_builtin_fn!(table, named "table", with length 1, of module);
-    make_builtin_fn!(stdin, named "stdin", of module);
+    make_builtin_fn(table, "table", &core, 1, context);
+    make_builtin_fn(stdin, "stdin", &core, 1, context);
 
-    module
+    core 
 }

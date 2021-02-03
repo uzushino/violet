@@ -3,14 +3,18 @@ use boa::{
     object::{GcObject, ObjectData},
     builtins::{
         function::{ NativeFunction, make_builtin_fn},
-   }, exec::Interpreter, };
+    }, 
+    exec::Interpreter,
+    Result, 
+    Value,
+};
 use linked_hash_map::LinkedHashMap as HashMap;
 use std::{borrow::Borrow, io::Read, ops::Deref};
 use crate::{
     builtin::value_to_string,
 };
 
-pub fn stdin(_this: &Value, _args: &[Value], _: &mut Interpreter) -> ResultValue {
+pub fn stdin(_this: &Value, _args: &[Value], _: &mut Context) -> Result<Value> {
     let mut buf = String::default();
 
     match std::io::stdin().read_to_string(&mut buf) {
@@ -34,20 +38,20 @@ fn value_to_map(obj: &gc::GcCell<Object>) -> HashMap<String, String> {
     new_obj
 }
 
-pub fn table(_this: &Value, args: &[Value], _: &mut Interpreter) -> ResultValue {
+pub fn table(this: &Value, args: &[Value], context: &mut Context) -> Result<Value> {
     let args = args
         .get(0)
-        .ok_or(ValueData::Null)
+        .ok_or(Value::Null)
         .map_err(|_| anyhow::Error::msg("Could not get 1st argument."))
         .unwrap();
 
     let mut table = String::default();
 
-    if let ValueData::Integer(length) = *args.get_field_slice("length").deref().borrow() {
+    if let Value::Integer(length) = *args.get_field_slice("length").deref().borrow() {
         let arr = (0..length)
             .map(|idx| args.get_field_slice(&idx.to_string()))
             .map(|row| match row.deref().borrow() {
-                &ValueData::Object(ref obj) => value_to_map(obj),
+                &Value::Object(ref obj) => value_to_map(obj),
                 _ => HashMap::default(),
             })
             .collect::<Vec<_>>();
@@ -60,7 +64,7 @@ pub fn table(_this: &Value, args: &[Value], _: &mut Interpreter) -> ResultValue 
         table = madato::mk_table(arr.as_slice(), &Some(opt));
     }
 
-    Ok(gc::Gc::new(ValueData::String(table)))
+    Ok(Value::String(table))
 }
 
 pub fn create_constructor(context: &Context) -> GcObject {

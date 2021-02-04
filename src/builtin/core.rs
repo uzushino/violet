@@ -7,6 +7,7 @@ use boa::{
     exec::Interpreter,
     Result, 
     Value,
+    value::RcString,
 };
 use linked_hash_map::LinkedHashMap as HashMap;
 use std::{borrow::Borrow, io::Read, ops::Deref};
@@ -18,18 +19,17 @@ pub fn stdin(_this: &Value, _args: &[Value], _: &mut Context) -> Result<Value> {
     let mut buf = String::default();
 
     match std::io::stdin().read_to_string(&mut buf) {
-        Ok(_) => Ok(to_value(buf)),
-        _ => Ok(gc::Gc::new(ValueData::Null)),
+        Ok(_) => Ok(Value::String(RcString::from(buf))),
+        _ => Ok(Value::Null),
     }
 }
 
-fn value_to_map(obj: &gc::GcCell<Object>) -> HashMap<String, String> {
+fn value_to_map(obj: &GcObject) -> HashMap<String, String> {
     let mut new_obj = HashMap::new();
 
-    for (k, property) in obj.borrow().properties.iter() {
-        let value = property.value.as_ref();
-
-        if let Some(v) = value {
+    for (k, value) in obj.borrow().properties().next() {
+        let value = value;
+        if let v = value {
             let s = value_to_string(v.deref().borrow());
             new_obj.insert(k.clone(), s.unwrap());
         }
@@ -39,7 +39,7 @@ fn value_to_map(obj: &gc::GcCell<Object>) -> HashMap<String, String> {
 }
 
 pub fn table(this: &Value, args: &[Value], context: &mut Context) -> Result<Value> {
-    let args = args
+    let fst = args
         .get(0)
         .ok_or(Value::Null)
         .map_err(|_| anyhow::Error::msg("Could not get 1st argument."))
@@ -47,11 +47,11 @@ pub fn table(this: &Value, args: &[Value], context: &mut Context) -> Result<Valu
 
     let mut table = String::default();
 
-    if let Value::Integer(length) = *args.get_field_slice("length").deref().borrow() {
-        let arr = (0..length)
-            .map(|idx| args.get_field_slice(&idx.to_string()))
-            .map(|row| match row.deref().borrow() {
-                &Value::Object(ref obj) => value_to_map(obj),
+    if let Value::Integer(length) = fst.get_field("length", context)? {
+        let arr = (0..length as usize)
+            .map(|idx: usize| args.get(idx))
+            .map(|row| match row.borrow() {
+                Some(Value::Object(ref obj)) => value_to_map(obj),
                 _ => HashMap::default(),
             })
             .collect::<Vec<_>>();

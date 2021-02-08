@@ -1,11 +1,11 @@
 use std::borrow::Borrow;
 use std::ops::Deref;
 
-use boa::builtins::{
-    object::ObjectKind, value::ValueData,
-    property::Property,
-    object::Object,
-    value::{to_value, Value}
+use boa::{
+    Value,
+    builtins::{
+        object::Object,
+    }
 };
 use std::collections::HashMap;
 
@@ -14,12 +14,12 @@ pub mod core;
 //#[cfg(feature = "mysql")]
 pub mod mysql;
 
-pub fn value_to_string(data: &ValueData) -> anyhow::Result<String> {
+pub fn value_to_string(data: &Value) -> anyhow::Result<String> {
     let s = match data.deref().borrow() {
-        ValueData::String(s) => s.to_string(),
-        ValueData::Number(n) => n.to_string(),
-        ValueData::Null => "<NULL>".to_string(),
-        ValueData::Boolean(b) => {
+        Value::String(s) => s.to_string(),
+        Value::Number(n) => n.to_string(),
+        Value::Null => "<NULL>".to_string(),
+        Value::Boolean(b) => {
             if *b {
                 "TRUE".to_string()
             } else {
@@ -32,14 +32,14 @@ pub fn value_to_string(data: &ValueData) -> anyhow::Result<String> {
     Ok(s)
 }
 
-pub fn value_to_vector(value: &ValueData) -> anyhow::Result<Vec<String>> {
+pub fn value_to_vector(value: &Value) -> anyhow::Result<Vec<String>> {
     match value.deref().borrow() {
-        &ValueData::Object(ref x) => {
+        &Value::Object(ref x) => {
             if x.deref().borrow().kind != ObjectKind::Array {
                 return Ok(Vec::default());
             }
 
-            if let ValueData::Integer(length) = *value.get_field_slice("length").deref().borrow() {
+            if let Value::Integer(length) = *value.get_field_slice("length").deref().borrow() {
                 let values = (0..length)
                     .map(|idx| value.get_field_slice(&idx.to_string()))
                     .map(|data| value_to_string(data.deref()).unwrap())
@@ -71,9 +71,9 @@ pub fn vector_to_value(this: &Value, args: Vec<Value>) -> Value {
     this.clone()
 }
 
-pub fn hashmap_to_value(this: &Value, args: HashMap<String, ValueData>) -> Value {
+pub fn hashmap_to_value(this: &Value, args: HashMap<String, Value>) -> Value {
     let obj = Object::default();
-    let object = ValueData::Object(gc::GcCell::new(obj));
+    let object = Value::Object(gc::GcCell::new(obj));
 
     let length = Property::new()
         .value(to_value(args.len() as i32))

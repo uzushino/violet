@@ -29,8 +29,9 @@ fn value_to_map(obj: &GcObject) -> HashMap<String, String> {
 
     for (k, value) in obj.borrow().string_properties().next() {
         let value = value;
-        if let v = value {
-            let s = value_to_string(v.deref().borrow());
+        if let boa::property::PropertyDescriptor::Data(v) = value {
+            let s = value_to_string(&v.value());
+
             if let Ok(key) = k.try_into() {
                 new_obj.insert(key, s.unwrap());
             }

@@ -17,7 +17,7 @@ pub mod mysql;
 pub fn value_to_string(data: &Value) -> anyhow::Result<String> {
     let s = match data.deref().borrow() {
         Value::String(s) => s.to_string(),
-        Value::Number(n) => n.to_string(),
+        Value::Integer(n) => n.to_string(),
         Value::Null => "<NULL>".to_string(),
         Value::Boolean(b) => {
             if *b {

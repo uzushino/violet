@@ -1,5 +1,6 @@
 use boa::{
     Context, 
+    gc::{Finalize, Trace},
     object::{GcObject, ObjectData},
     builtins::{
         function::{ NativeFunction, make_builtin_fn},
@@ -14,6 +15,10 @@ use std::{borrow::Borrow, convert::TryInto, io::Read, ops::Deref};
 use crate::{
     builtin::value_to_string,
 };
+
+#[derive(Debug, Trace, Finalize)]
+pub struct Violet {
+} 
 
 pub fn stdin(_this: &Value, _args: &[Value], _: &mut Context) -> Result<Value> {
     let mut buf = String::default();

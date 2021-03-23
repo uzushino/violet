@@ -1,4 +1,5 @@
 use clap::{crate_version, value_t, Arg};
+use std::io::{stdout, Write};
 
 fn main() -> anyhow::Result<()> {
     env_logger::init();
@@ -16,7 +17,9 @@ fn main() -> anyhow::Result<()> {
     let input = std::fs::read_to_string(file.clone()).unwrap();
     let markdown = run(input.as_str())?;
 
-    println!("{}", markdown);
+    let out = stdout();
+    let mut out = out.lock();
+    write!(out, "{}", markdown);
 
     Ok(())
 }

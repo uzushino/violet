@@ -1,85 +1,43 @@
+use std::collections::HashMap;
+
 use boa::{
-    Context, 
+    class::{Class, ClassBuilder},
     gc::{Finalize, Trace},
-    object::{GcObject, ObjectData},
-    builtins::{
-        function::{ NativeFunction, make_builtin_fn},
-    }, 
-    exec::Interpreter,
-    Result, 
-    Value,
-    value::RcString,
-};
-use linked_hash_map::LinkedHashMap as HashMap;
-use std::{borrow::Borrow, convert::TryInto, io::Read, ops::Deref};
-use crate::{
-    builtin::value_to_string,
+    property::Attribute,
+    Context, Result, Value,
 };
 
 #[derive(Debug, Trace, Finalize)]
-pub struct Violet {
-} 
+pub struct Violet {} 
 
-pub fn stdin(_this: &Value, _args: &[Value], _: &mut Context) -> Result<Value> {
-    let mut buf = String::default();
+impl Class for Violet {
+    const NAME: &'static str = "Violet";
 
-    match std::io::stdin().read_to_string(&mut buf) {
-        Ok(_) => Ok(Value::String(RcString::from(buf))),
-        _ => Ok(Value::Null),
+    const LENGTH: usize = 2;
+
+    fn constructor(_this: &Value, args: &[Value], context: &mut Context) -> Result<Self> {
+        Ok(Self {}) 
     }
-}
 
-fn value_to_map(obj: &GcObject) -> HashMap<String, String> {
-    let mut new_obj = HashMap::new();
-
-    for (k, value) in obj.borrow().string_properties().next() {
-        let value = value;
-        if let boa::property::PropertyDescriptor::Data(v) = value {
-            let s = value_to_string(&v.value());
-
-            if let Ok(key) = k.try_into() {
-                new_obj.insert(key, s.unwrap());
+    fn init(class: &mut ClassBuilder) -> Result<()> {
+        class.static_method("table", 1, |_this, args, _ctx| {
+            if let Some(arg) = args.get(0) {
+                if let Some(object) = arg.as_object() {
+                    if object.is::<HashMap<String, String>>() {
+                        return Ok(true.into()); // return `true`.
+                    }
+                }
             }
-        }
+
+            Ok(false.into()) // otherwise `false`.
+        });
+        
+        class.static_property(
+            "staticProperty",
+            "Im a static property",
+            Attribute::WRITABLE | Attribute::ENUMERABLE | Attribute::PERMANENT,
+        );
+
+        Ok(())
     }
-
-    new_obj
-}
-
-pub fn table(this: &Value, args: &[Value], context: &mut Context) -> Result<Value> {
-    let fst = args
-        .get(0)
-        .ok_or(Value::Null)
-        .map_err(|_| anyhow::Error::msg("Could not get 1st argument."))
-        .unwrap();
-
-    let mut table = String::default();
-
-    if let Value::Integer(length) = fst.get_field("length", context)? {
-        let arr = (0..length as usize)
-            .map(|idx: usize| args.get(idx))
-            .map(|row| match row.borrow() {
-                Some(Value::Object(ref obj)) => value_to_map(obj),
-                _ => HashMap::default(),
-            })
-            .collect::<Vec<_>>();
-
-        let opt = madato::types::RenderOptions {
-            headings: None,
-            ..Default::default()
-        };
-
-        table = madato::mk_table(arr.as_slice(), &Some(opt));
-    }
-
-    Ok(Value::String(RcString::from(table)))
-}
-
-pub fn create_constructor(context: &Context) -> GcObject {
-    let mut core = context.construct_object();
-
-    make_builtin_fn(table, "table", &core, 1, context);
-    make_builtin_fn(stdin, "stdin", &core, 1, context);
-
-    core 
 }

@@ -32,11 +32,15 @@ pub fn make_options() -> Options {
 
 pub struct Markdown {
     pub input: String,
+    pub isolate: Isolate,
 }
 
 impl Markdown {
     pub fn new(input: impl ToString) -> Markdown {
+        let isolate = Isolate::new();
+
         Markdown {
+            isolate,
             input: input.to_string(),
         }
     }
@@ -76,11 +80,10 @@ impl Markdown {
     pub fn evaluate(&self) -> anyhow::Result<String> {
         self.parse(|script| {
             let isolate = Isolate::new();
-
-            isolate.eval(script).unwrap_or_default()
+            isolate.eval(script.as_str()).unwrap_or_default()
         })
     }
-
+    
     pub fn save_as(&self, path: &str) -> anyhow::Result<()> {
         let file = fs::File::create(path)?;
         let text = self.evaluate()?;

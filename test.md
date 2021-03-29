@@ -9,19 +9,11 @@ Test
 ~strike~
 
 ```violet
+let a = new Map();
 
-const db = Mysql.connection(
-    "mysql://root:password@127.0.0.1/violet"
-);
+a.set("aa", "b");
 
-const row = Mysql.query(
-    ["id", "name"], 
-    ["int", "string"], 
-    "SELECT id, name FROM users"
-);
-
-Violet.table(row)
-
+Violet.table(a)
 ```
 
 - [ ] aaaa

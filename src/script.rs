@@ -8,14 +8,16 @@ pub struct Isolate {
 impl Isolate {
     pub fn new() -> Self {
         let buf = String::default();
+
         Self { buf }
     }
 
-    pub fn eval<A: Into<String>>(&self, script: A) -> Result<String, gc::Gc<boa::builtins::value::ValueData>> {
+    pub fn eval(&self, script: &str) -> Result<String, boa::Value> {
         let mut context = Context::new();
-       
-        context.register_global_class::<builtin::core::Violet>();
+
+        context.register_global_class::<builtin::core::Violet>()?;
         
-        context.eval(script)
+        let result = context.eval(script)?;
+        result.to_string(&mut context).map(|s| s.to_string())
     }
 }

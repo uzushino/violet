@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-
 use boa::{
     class::{Class, ClassBuilder},
     gc::{Finalize, Trace},
@@ -23,7 +22,8 @@ impl Class for Violet {
         class.static_method("table", 1, |_this, args, _ctx| {
             if let Some(arg) = args.get(0) {
                 if let Some(object) = arg.as_object() {
-                    if object.is::<HashMap<String, String>>() {
+                    if object.is_map() {
+                        // std::fs::write("foo.txt", format!("{:?}", object)).unwrap();
                         return Ok(true.into()); // return `true`.
                     }
                 }
@@ -32,12 +32,6 @@ impl Class for Violet {
             Ok(false.into()) // otherwise `false`.
         });
         
-        class.static_property(
-            "staticProperty",
-            "Im a static property",
-            Attribute::WRITABLE | Attribute::ENUMERABLE | Attribute::PERMANENT,
-        );
-
         Ok(())
     }
 }

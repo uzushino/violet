@@ -96,7 +96,6 @@ impl Markdown {
 
     pub fn to_html(&self) -> anyhow::Result<String> {
         let markdown = self.evaluate()?;
-
         let opts = comrak::ComrakOptions {
             ext_table: true,
             ext_tasklist: true,

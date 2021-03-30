@@ -14,7 +14,7 @@ impl Class for Violet {
 
     const LENGTH: usize = 2;
 
-    fn constructor(_this: &Value, args: &[Value], context: &mut Context) -> Result<Self> {
+    fn constructor(_this: &Value, _args: &[Value], _context: &mut Context) -> Result<Self> {
         Ok(Self {}) 
     }
 
@@ -23,13 +23,12 @@ impl Class for Violet {
             if let Some(arg) = args.get(0) {
                 if let Some(object) = arg.as_object() {
                     if object.is_map() {
-                        // std::fs::write("foo.txt", format!("{:?}", object)).unwrap();
                         return Ok(true.into()); // return `true`.
                     }
                 }
             }
 
-            Ok(false.into()) // otherwise `false`.
+            Ok(false.into()) 
         });
         
         Ok(())

@@ -19,7 +19,7 @@ fn main() -> anyhow::Result<()> {
 
     let out = stdout();
     let mut out = out.lock();
-    write!(out, "{}", markdown);
+    write!(out, "{}", markdown)?;
 
     Ok(())
 }
